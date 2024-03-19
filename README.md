@@ -27,7 +27,7 @@ Ensure these packages are installed in your Python environment to run the script
 2. Ensure you have Python 3.x installed along with the required dependencies.
 3. Run the script using a Python interpreter:
    ```
-   python hohmann_transfer.py
+   hohmann_transfer.py
    ```
 4. Follow the on-screen prompts to input the initial altitude, final altitude, initial orbital inclination, and final orbital inclination.
 5. The script will calculate and display the transfer analysis results, followed by a 3D visualization of the orbits.
