@@ -1,6 +1,6 @@
-# Hohmann Orbit Transfer Analysis
+# Hohmann Transfer Orbit Analysis
 
-This script performs a Hohmann transfer orbit analysis, including calculations for both planar and non-coplanar circular orbit transfers. It includes generating three-dimensional orbit graphics and a graphical primer vector analysis.
+This script performs a Hohmann transfer orbit analysis, including calculations for both planar and non-coplanar circular orbit transfers. It also generates three-dimensional orbit graphics and a graphical primer vector analysis.
 
 ## Overview
 
