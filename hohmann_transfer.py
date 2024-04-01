@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.constants import pi
 from scipy.optimize import brentq
 
-# Constants
+# Calculation Constants
 mu = 398600.4418  # Earth's gravitational parameter (km^3/s^2)
 req = 6378.137  # Earth's equatorial radius (km)
 
@@ -53,7 +53,7 @@ y = req * np.sin(u) * np.sin(v)
 z = req * np.cos(v)
 ax.plot_surface(x, y, z, color='lightblue', alpha=0.6)
 
-# Orbits visualization (simplified for demonstration)
+# Simplified orbits visualization 
 theta = np.linspace(0, 2 * np.pi, 100)
 orbit1_x, orbit1_y = (r1 * np.cos(theta)), (r1 * np.sin(theta))
 orbit2_x, orbit2_y = (r2 * np.cos(theta)), (r2 * np.sin(theta))
