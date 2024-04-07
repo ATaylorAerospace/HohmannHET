@@ -4,7 +4,7 @@ This script performs a Hohmann transfer orbit analysis, including calculations f
 
 ## Overview
 
-The Hohmann transfer is the most efficient way to move a spaceprobes between two orbits using two engine impulses. This script provides a tool to analyze such transfers, calculating key parameters like delta-v (change in velocity), transfer orbit characteristics, and inclination changes.
+The Hohmann transfer is the most efficient way to move spaceprobes between two orbits using two engine impulses. This script provides a tool to analyze such transfers, calculating key parameters like delta-v (change in velocity), transfer orbit characteristics, and inclination changes.
 
 ## Features
 
