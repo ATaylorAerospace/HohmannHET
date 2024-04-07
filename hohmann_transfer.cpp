@@ -36,10 +36,10 @@ int main() {
     std::cout << "\nHohmann Orbit Transfer Analysis\n";
     double alt1 = get_input("Please input the initial altitude (kilometers): ");
     double alt2 = get_input("Please input the final altitude (kilometers): ");
-    double inc1 = get_input("Please input the initial orbital inclination (degrees) (0 <= inclination <= 180): ") * dtr;
-    double inc2 = get_input("Please input the final orbital inclination (degrees) (0 <= inclination <= 180): ") * dtr;
+    double inc1 = get_input("Please input the initial inclination (degrees) (0 <= inclination <= 180): ") * dtr;
+    double inc2 = get_input("Please input the final inclination (degrees) (0 <= inclination <= 180): ") * dtr;
 
-    // Calculation section (to be implemented similarly to the Python version)
+    // Calculation section 
     
     return 0;
 }
