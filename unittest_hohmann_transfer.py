@@ -4,7 +4,7 @@ from hohmann_transfer import hohmfunc
 
 class TestHohmannTransfer(unittest.TestCase):
     def test_hohmfunc(self):
-        # Example test values
+        # Example untitest values
         dinc1, v1, hn1, hn2, hn3, dinc = 10, 7.8, 1.5, 0.9, 1.2, 20
         # Expected result calculated independently
         expected_result = 11.892394
