@@ -11,7 +11,7 @@ dtr = pi/180; % Degrees to radians
 % Brent root-finding tolerance
 rtol = 1e-8;
 
-% Requesting user inputs and converting degrees to radians for calculations
+% Requesting user inputs and converting degrees to radians for orbit calculations
 alt1 = input('Please input the initial altitude (kilometers): ');
 alt2 = input('Please input the final altitude (kilometers): ');
 inc1 = input('Please input the initial orbital inclination (degrees): ');
