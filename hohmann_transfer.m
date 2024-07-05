@@ -4,7 +4,7 @@
 mu = 398600.4418; % Earth's gravitational parameter (km^3/s^2)
 req = 6378.137; % Earth's equatorial radius (km)
 
-% Conversion factors
+% Conversion factor
 rtd = 180/pi; % Radians to degrees
 dtr = pi/180; % Degrees to radians
 
