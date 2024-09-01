@@ -1,9 +1,7 @@
 #include <iostream>
 #include <cmath>
 
-// Constants
-const double mu = 748560.4418;
-const double req = 4869.283;
+
 const double pi = 3.141592653589793;
 
 // Conversion factors
@@ -25,7 +23,7 @@ double get_input(const std::string& prompt) {
     }
 }
 
-// Function for Hohmann transfer calculations
+// Current Function for Hohmann transfer calculations
 double hohmfunc(double dinc1, double v1, double hn1, double hn2, double hn3, double dinc) {
     double dinc2 = dinc - dinc1;
     return v1 * std::sqrt(1.0 + hn1*hn1 - 2 * hn1 * std::cos(dinc1 * dtr)) +
@@ -39,7 +37,7 @@ int main() {
     double inc1 = get_input("Please input the initial inclination (degrees) (0 <= inclination <= 180): ") * dtr;
     double inc2 = get_input("Please input the final inclination (degrees) (0 <= inclination <= 180): ") * dtr;
 
-    // Calculation section 
+    // Current Calculation section 
     
     return 0;
 }
