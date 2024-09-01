@@ -1,9 +1,7 @@
 #include <iostream>
 #include <cmath>
 
-// Transfer Constants
-const double mu = 398600.4418;
-const double req = 6378.137;
+
 const double pi = 3.141592653589793;
 
 // Conversion factors
