@@ -1,0 +1,93 @@
+#include <gtest/gtest.h>
+#include <cmath>
+#include <stdexcept>
+#include "hohmann_transfer.cpp"  // Include the implementation file
+
+// Test Fixture for HohmannTransfer
+class HohmannTransferTest : public ::testing::Test {
+protected:
+    // Some predefined test scenarios
+    HohmannTransfer leo_to_geo{500, 35786};
+    HohmannTransfer meo_to_heo{5000, 20000};
+};
+
+// Test Initialization and Input Validation
+TEST_F(HohmannTransferTest, Initialization) {
+    // Test valid initialization
+    EXPECT_NO_THROW(HohmannTransfer(500, 1000));
+    
+    // Test invalid inputs (negative altitudes)
+    EXPECT_THROW(HohmannTransfer(-100, 1000), std::invalid_argument);
+    EXPECT_THROW(HohmannTransfer(500, -1000), std::invalid_argument);
+}
+
+// Test Orbital Radii Calculation
+TEST_F(HohmannTransferTest, OrbitalRadii) {
+    // Verify orbital radii calculations
+    EXPECT_NEAR(leo_to_geo.getTransferSemiMajorAxis(), 
+                (R_EARTH + 500 + R_EARTH + 35786) / 2.0, 
+                1e-3);
+}
+
+// Test Delta-V Calculations
+TEST_F(HohmannTransferTest, DeltaVCalculations) {
+    // Validate delta-V calculations are not zero
+    EXPECT_NE(leo_to_geo.getDeltaVDeparture(), 0.0);
+    EXPECT_NE(leo_to_geo.getDeltaVArrival(), 0.0);
+    
+    // Verify total delta-V is positive
+    double total_delta_v = leo_to_geo.getDeltaVDeparture() + 
+                            leo_to_geo.getDeltaVArrival();
+    EXPECT_GT(total_delta_v, 0.0);
+}
+
+// Test Transfer Time Calculation
+TEST_F(HohmannTransferTest, TransferTimeCalculation) {
+    // Transfer time should be reasonable and greater than zero
+    double transfer_time = leo_to_geo.calculateTransferTime();
+    EXPECT_GT(transfer_time, 0.0);
+    
+    // Validate transfer time calculation using orbital mechanics formula
+    double expected_time = M_PI * std::sqrt(
+        std::pow(leo_to_geo.getTransferSemiMajorAxis(), 3) / MU
+    );
+    EXPECT_NEAR(transfer_time, expected_time, 1e-3);
+}
+
+// Test Multiple Transfer Scenarios
+TEST_F(HohmannTransferTest, MultipleTransferScenarios) {
+    // Test cases with different altitude ranges
+    std::vector<std::pair<double, double>> scenarios = {
+        {500, 1000},    // Low altitude transfer
+        {5000, 20000},  // Medium to high altitude
+        {1000, 35786}   // LEO to Geostationary
+    };
+    
+    for (const auto& scenario : scenarios) {
+        // Create a new transfer for each scenario
+        HohmannTransfer transfer(scenario.first, scenario.second);
+        
+        // Basic validation for each scenario
+        EXPECT_GT(transfer.getDeltaVDeparture(), 0.0);
+        EXPECT_GT(transfer.getDeltaVArrival(), 0.0);
+        EXPECT_GT(transfer.calculateTransferTime(), 0.0);
+    }
+}
+
+// Test Edge Cases and Boundary Conditions
+TEST_F(HohmannTransferTest, EdgeCases) {
+    // Verify behavior with very low and very high altitudes
+    EXPECT_NO_THROW(HohmannTransfer(200, 500));    // Low Earth Orbit
+    EXPECT_NO_THROW(HohmannTransfer(35786, 40000));  // Geostationary and beyond
+    
+    // Test transfers between significantly different altitudes
+    HohmannTransfer extreme_transfer(200, 35786);
+    EXPECT_GT(extreme_transfer.getDeltaVDeparture(), 0.0);
+    EXPECT_GT(extreme_transfer.getDeltaVArrival(), 0.0);
+}
+
+// Main function to run the tests
+int main(int argc, char **argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}
