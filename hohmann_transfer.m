@@ -1,93 +1,142 @@
-% Hohmann Orbit Transfer Analysis
-
-% Constants
-mu = 398600.4418; % Earth's gravitational parameter (km^3/s^2)
-req = 6378.137; % Earth's equatorial radius (km)
-
-% Conversion factor
-rtd = 180/pi; % Radians to degrees
-dtr = pi/180; % Degrees to radians
-
-% Brent root-finding tolerance
-rtol = 1e-8;
-
-% Requesting user inputs and converting degrees to radians for orbit calculations
-alt1 = input('Please input the initial altitude (kilometers): ');
-alt2 = input('Please input the final altitude (kilometers): ');
-inc1 = input('Please input the initial orbital inclination (degrees): ');
-inc2 = input('Please input the final orbital inclination (degrees): ');
-inc1 = inc1 * dtr;
-inc2 = inc2 * dtr;
-
-% Calculations for Hohmann transfer
-dinc = abs(inc2 - inc1);
-r1 = req + alt1;
-r2 = req + alt2;
-v1 = sqrt(mu / r1);
-hn1 = sqrt(2 * r2 / (r1 + r2));
-hn2 = sqrt(r1 / r2);
-hn3 = sqrt(2 * r1 / (r1 + r2));
-
-% Earth representation (3D plot)
-[X, Y] = sphere(100);
-R = req * ones(size(X));
-fig = figure;
-plot3(X, Y, R, 'Color', 'lightblue', 'Alpha', 0.6);
-title('Hohmann Transfer: Earth and Orbits');
-xlabel('X'); ylabel('Y'); zlabel('Z');
-
-% Orbits visualization (simplified for demonstration)
-theta = 0:0.01:2*pi; % Small angle increments for plotting
-orbit1 = [r1*cos(theta), r1*sin(theta), zeros(size(theta))];
-orbit2 = [r2*cos(theta), r2*sin(theta), zeros(size(theta))];
-
-% Plot initial and final orbits
-plot3(orbit1(1), orbit1(2), orbit1(3), 'LineWidth', 2);
-hold on
-plot3(orbit2(1), orbit2(2), orbit2(3), 'LineWidth', 2);
-
-% Plot inclination change
-dinc1 = inc1 - pi/2;
-dinc2 = inc2 - pi/2;
-plot3([0, r1*cos(dinc1)], [0, r1*sin(dinc1)], ...
-    [0, hn1*r1*sin(dinc1/2)], 'LineWidth', 2, 'Color', 'red');
-plot3([0, r2*cos(dinc2)], [0, r2*sin(dinc2)], ...
-    [0, hn1*r2*sin((pi-dinc2)/2)], 'LineWidth', 2, 'Color', 'red');
-
-% Labeling and grid
-grid on;
-view(-25, 30); % Adjusting view angle
-legend('Initial Orbit', 'Final Orbit', 'Inclination Change');
-
-% Display figure
-show function delta_inc = hohm_inclination(alt1, alt2, inc1, inc2)
-    % Calculate the change in inclination angle for Hohmann transfer
-    % Inputs:
-    %   alt1, alt2 (km): Initial and final altitudes
-    %   inc1, inc2 (deg): Initial and final orbital inclinations
-    % Output:
-    %   delta_inc (rad): Change in inclination angle
-
-    r1 = req + alt1;
-    r2 = req + alt2;
-    dinc = abs(inc2 - inc1);
+classdef HohmannTransfer
+    % Calculation Constants
+    properties (Constant)
+        MU = 398600.4418;     % Earth's gravitational parameter (km^3/s^2)
+        R_EARTH = 6378.137;   % Earth's equatorial radius (km)
+    end
     
-    hn1 = sqrt(2 * r2 / (r1 + r2));
-    hn2 = sqrt(r1 / r2);
+    % Private properties to store transfer orbit parameters
+    properties (Access = private)
+        r1             % Initial orbital radius (km)
+        r2             % Final orbital radius (km)
+        a_transfer     % Transfer orbit semi-major axis (km)
+        v1             % Initial orbital velocity (km/s)
+        delta_v_departure  % Delta-V for departure burn (km/s)
+        delta_v_arrival    % Delta-V for arrival burn (km/s)
+    end
     
-    delta_inc = pi - 2*atan(hn1*sin(dinc/2));
+    methods
+        % Constructor
+        function obj = HohmannTransfer(initial_altitude, final_altitude)
+            % Validate inputs
+            if initial_altitude <= 0 || final_altitude <= 0
+                error('Altitudes must be positive');
+            end
+            
+            % Calculate orbital radii
+            obj.r1 = obj.R_EARTH + initial_altitude;
+            obj.r2 = obj.R_EARTH + final_altitude;
+            
+            % Calculate transfer orbit semi-major axis
+            obj.a_transfer = (obj.r1 + obj.r2) / 2;
+            
+            % Calculate initial orbital velocity
+            obj.v1 = sqrt(obj.MU / obj.r1);
+            
+            % Compute delta-V for transfer
+            obj.delta_v_departure = obj.calculateDeltaVDeparture();
+            obj.delta_v_arrival = obj.calculateDeltaVArrival();
+        end
+        
+        % Calculate delta-V for departure burn
+        function delta_v = calculateDeltaVDeparture(obj)
+            v_transfer_1 = sqrt(obj.MU * (2/obj.r1 - 1/obj.a_transfer));
+            delta_v = v_transfer_1 - obj.v1;
+        end
+        
+        % Calculate delta-V for arrival burn
+        function delta_v = calculateDeltaVArrival(obj)
+            % Velocity at final orbit
+            v2 = sqrt(obj.MU / obj.r2);
+            
+            % Velocity at transfer orbit apoapsis
+            v_transfer_2 = sqrt(obj.MU * (2/obj.r2 - 1/obj.a_transfer));
+            
+            delta_v = v2 - v_transfer_2;
+        end
+        
+        % Calculate transfer time
+        function transfer_time = calculateTransferTime(obj)
+            transfer_time = pi * sqrt(obj.a_transfer^3 / obj.MU);
+        end
+        
+        % Print transfer details
+        function printTransferDetails(obj)
+            fprintf('\nHohmann Transfer Orbit Details:\n');
+            fprintf('Initial Orbit Altitude: %.2f km\n', obj.r1 - obj.R_EARTH);
+            fprintf('Final Orbit Altitude: %.2f km\n', obj.r2 - obj.R_EARTH);
+            fprintf('Transfer Orbit Semi-Major Axis: %.2f km\n', obj.a_transfer);
+            fprintf('Delta-V (Departure Burn): %.2f km/s\n', obj.delta_v_departure);
+            fprintf('Delta-V (Arrival Burn): %.2f km/s\n', obj.delta_v_arrival);
+            fprintf('Total Delta-V: %.2f km/s\n', obj.delta_v_departure + obj.delta_v_arrival);
+            fprintf('Transfer Time: %.2f hours\n', obj.calculateTransferTime() / 3600);
+        end
+        
+        % Visualize transfer orbit (similar to Python implementation)
+        function visualizeTransfer(obj)
+            % Create figure
+            figure('Position', [100, 100, 1200, 800]);
+            
+            % 3D plot setup
+            hold on;
+            axis equal;
+            
+            % Earth representation (wireframe sphere)
+            [x, y, z] = sphere(20);
+            x = x * obj.R_EARTH;
+            y = y * obj.R_EARTH;
+            z = z * obj.R_EARTH;
+            surf(x, y, z, 'FaceAlpha', 0.1, 'EdgeColor', 'blue');
+            
+            % Orbit visualization
+            theta = linspace(0, 2*pi, 100);
+            
+            % Initial orbit
+            orbit1_x = obj.r1 * cos(theta);
+            orbit1_y = obj.r1 * sin(theta);
+            plot3(orbit1_x, orbit1_y, zeros(size(theta)), 'g-', 'LineWidth', 2, 'DisplayName', 'Initial Orbit');
+            
+            % Final orbit
+            orbit2_x = obj.r2 * cos(theta);
+            orbit2_y = obj.r2 * sin(theta);
+            plot3(orbit2_x, orbit2_y, zeros(size(theta)), 'r-', 'LineWidth', 2, 'DisplayName', 'Final Orbit');
+            
+            % Labeling
+            xlabel('X (km)');
+            ylabel('Y (km)');
+            zlabel('Z (km)');
+            title('Hohmann Transfer Orbit');
+            legend('show');
+            
+            hold off;
+            view(45, 20);
+        end
+    end
+    
+    % Static method for user interaction
+    methods (Static)
+        function main()
+            try
+                % User inputs
+                initial_alt = input('Enter initial orbit altitude (km): ');
+                final_alt = input('Enter final orbit altitude (km): ');
+                
+                % Create Hohmann transfer object
+                transfer = HohmannTransfer(initial_alt, final_alt);
+                
+                % Print transfer details
+                transfer.printTransferDetails();
+                
+                % Visualize transfer
+                transfer.visualizeTransfer();
+            catch ME
+                % Error handling
+                fprintf('Error: %s\n', ME.message);
+                fprintf('Please enter valid numerical inputs.\n');
+            end
+        end
+    end
 end
 
-% Find the delta inclination angle
-delta_inc = hohm_inclination(alt1, alt2, inc1, inc2);
-delta_inc_deg = delta_inc / dtr;
-
-% Calculate the minimum delta v required for transfer
-v1 = sqrt(mu / r1);
-v2 = sqrt(mu / r2);
-Delta_v = 2 * v1 * sin(delta_inc / 2);
-
-% Display results
-fprintf('Change in Inclination: %.2f degrees\n', delta_inc_deg);
-fprintf('Minimum Delta-v: %.2f m/s\n', Delta_v);
-```
+% Optional: Uncomment the line below to run directly
+% HohmannTransfer.main();
