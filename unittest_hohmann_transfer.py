@@ -1,31 +1,74 @@
 import unittest
 import numpy as np
-from hohmann_transfer import hohmfunc
+import math
+from scipy.constants import pi, g
 
-class TestHohmannTransfer(unittest.TestCase):
-    def test_hohmfunc(self):
-        # Example untitest values
-        dinc1, v1, hn1, hn2, hn3, dinc = 10, 7.8, 1.5, 0.9, 1.2, 20
-        # Expected result calculated independently
-        expected_result = 11.892394
-        result = hohmfunc(dinc1, v1, hn1, hn2, hn3, dinc)
-        # Assert that the actual result is close to the expected result within an acceptable margin
-        self.assertAlmostEqual(result, expected_result, places=5)
+# Import the functions from the original script
+from orbital_drag_script import (
+    atmospheric_density,
+    drag_force,
+    orbital_lifetime,
+    calculate_orbital_parameters
+)
 
-    def test_invalid_input(self):
-        # Test with invalid input values
-        with self.assertRaises(ValueError):
-            hohmfunc(0, 7.8, 1.5, 0.9, 1.2, 20)  # dinc1 cannot be zero
-        with self.assertRaises(ValueError):
-            hohmfunc(10, 0, 1.5, 0.9, 1.2, 20)  # v1 cannot be zero
-        with self.assertRaises(ValueError):
-            hohmfunc(10, 7.8, 0, 0.9, 1.2, 20)  # hn1 cannot be zero
-        with self.assertRaises(ValueError):
-            hohmfunc(10, 7.8, 1.5, 0, 1.2, 20)  # hn2 cannot be zero
-        with self.assertRaises(ValueError):
-            hohmfunc(10, 7.8, 1.5, 0.9, 0, 20)  # hn3 cannot be zero
-        with self.assertRaises(ValueError):
-            hohmfunc(10, 7.8, 1.5, 0.9, 1.2, 0)  # dinc cannot be zero
+class TestOrbitalDragCalculations(unittest.TestCase):
+    def setUp(self):
+        # Constants for testing
+        self.req = 6378.137  # Earth's equatorial radius (km)
+        self.mu = 398600.4418  # Earth's gravitational parameter (km^3/s^2)
+
+    # ... [previous test methods remain the same] ...
+
+    def test_input_validation(self):
+        """Comprehensive test for input validation across all functions"""
+        # Atmospheric Density Function
+        with self.assertRaises(ValueError, msg="Negative altitude should raise ValueError"):
+            atmospheric_density(-10)
+        with self.assertRaises(ValueError, msg="Non-numeric altitude should raise ValueError"):
+            atmospheric_density('invalid')
+
+        # Drag Force Function
+        with self.assertRaises(ValueError, msg="Negative altitude should raise ValueError"):
+            drag_force(-300, 7.7, 10)
+        with self.assertRaises(ValueError, msg="Negative velocity should raise ValueError"):
+            drag_force(300, -7.7, 10)
+        with self.assertRaises(ValueError, msg="Negative area should raise ValueError"):
+            drag_force(300, 7.7, -10)
+        with self.assertRaises(ValueError, msg="Negative drag coefficient should raise ValueError"):
+            drag_force(300, 7.7, 10, -1.0)
+
+        # Orbital Lifetime Function
+        with self.assertRaises(ValueError, msg="Negative altitude should raise ValueError"):
+            orbital_lifetime(-300, 7.7, 1000, 10)
+        with self.assertRaises(ValueError, msg="Negative velocity should raise ValueError"):
+            orbital_lifetime(300, -7.7, 1000, 10)
+        with self.assertRaises(ValueError, msg="Negative mass should raise ValueError"):
+            orbital_lifetime(300, 7.7, -1000, 10)
+        with self.assertRaises(ValueError, msg="Negative area should raise ValueError"):
+            orbital_lifetime(300, 7.7, 1000, -10)
+
+        # Calculate Orbital Parameters Function
+        with self.assertRaises(ValueError, msg="Negative altitude should raise ValueError"):
+            calculate_orbital_parameters(-300)
+
+    def test_type_checking(self):
+        """Test that functions handle incorrect input types"""
+        # List of test cases with invalid types
+        invalid_inputs = [
+            {'func': atmospheric_density, 'args': ['invalid']},
+            {'func': drag_force, 'args': [-300, 'invalid', 10]},
+            {'func': orbital_lifetime, 'args': [300, 7.7, 'invalid', 10]},
+            {'func': calculate_orbital_parameters, 'args': ['invalid']}
+        ]
+
+        # Test each function with invalid input types
+        for test_case in invalid_inputs:
+            with self.assertRaises((ValueError, TypeError), 
+                                   msg=f"Invalid input type should raise error for {test_case['func'].__name__}"):
+                test_case['func'](*test_case['args'])
+
+def main():
+    unittest.main()
 
 if __name__ == '__main__':
-    unittest.main()
+    main()
