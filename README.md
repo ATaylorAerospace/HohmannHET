@@ -1,13 +1,10 @@
-Here's the complete README file in Markdown format, ready to be saved as a single file named `README.md`:
+** Hohmann Transfer Orbit Analysis **
 
-```markdown
-# Hohmann Transfer Orbit Analysis
+** Overview **
 
-## Overview
+This script provides a comprehensive tool for calculating and visualizing orbital transfers around Earth. It specifically focuses on the most energy-efficient method of transferring a spacecraft between two circular orbits using minimal propulsive maneuvers.
 
-The **Hohmann Transfer Orbit Analysis** script provides a comprehensive tool for calculating and visualizing orbital transfers around Earth. It specifically focuses on the most energy-efficient method of transferring a spacecraft between two circular orbits using minimal propulsive maneuvers.
-
-## Features
+** Features **
 
 ### Precise Orbital Transfer Calculations
 - Compute delta-v (velocity change) for departure and arrival burns.
@@ -23,7 +20,7 @@ The **Hohmann Transfer Orbit Analysis** script provides a comprehensive tool for
 - Plotting of initial and final orbital trajectories.
 - Visual understanding of the transfer orbit.
 
-## Dependencies
+** Dependencies **
 
 - `numpy`: Numerical computing library.
 - `matplotlib`: Plotting and visualization.
@@ -49,7 +46,7 @@ The script leverages key celestial mechanics principles:
    pip install numpy matplotlib scipy
    ```
 
-## Usage
+** Usage **
 
 Run the script:
 
@@ -91,11 +88,10 @@ The 3D plot will show:
 
 - Currently supports transfers around Earth.
 - Assumes circular orbits.
-- Does not account for complex gravitational interactions.
+- Does not account for extremely complex gravitational interactions prior to geo insertion.
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
