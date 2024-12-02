@@ -97,5 +97,3 @@ The 3D plot will show:
 
 This project is open-sourced under the MIT License. See the [LICENSE](LICENSE) file for details.
 ```
-
-Save this content as `README.md` in your repository. Let me know if you need further help!
