@@ -1,10 +1,10 @@
-** Hohmann Transfer Orbit Analysis **
+### Hohmann Transfer Orbit Analysis 
 
-** Overview **
+### Overview 
 
 This script provides a comprehensive tool for calculating and visualizing orbital transfers around Earth. It specifically focuses on the most energy-efficient method of transferring a spacecraft between two circular orbits using minimal propulsive maneuvers.
 
-** Features **
+### Features 
 
 ### Precise Orbital Transfer Calculations
 - Compute delta-v (velocity change) for departure and arrival burns.
@@ -20,7 +20,7 @@ This script provides a comprehensive tool for calculating and visualizing orbita
 - Plotting of initial and final orbital trajectories.
 - Visual understanding of the transfer orbit.
 
-** Dependencies **
+### Dependencies 
 
 - `numpy`: Numerical computing library.
 - `matplotlib`: Plotting and visualization.
