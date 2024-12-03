@@ -88,7 +88,7 @@ The 3D plot will show:
 
 - Currently supports transfers around Earth.
 - Assumes circular orbits.
-- Does not account for extremely complex gravitational interactions prior to geo insertion.
+- Does not account for extremely complex gravitational interactions prior to insertion.
 
 ## Contributing
 
