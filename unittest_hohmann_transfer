@@ -1,101 +1,128 @@
-classdef TestHohmannTransfer < matlab.unittest.TestCase
-    methods (Test)
-        function testValidTransfer(testCase)
-            % Test case: Transfer from 500 km to 2000 km orbit
-            initial_altitude = 500.0;   % km
-            final_altitude = 2000.0;    % km
-            
-            % Create an instance of HohmannTransfer
-            transfer = HohmannTransfer(initial_altitude, final_altitude);
-            
-            % Expected results (pre-calculated)
-            MU = HohmannTransfer.MU;          % Earth's gravitational parameter
-            R_EARTH = HohmannTransfer.R_EARTH; % Earth's radius
-            r1 = R_EARTH + initial_altitude;
-            r2 = R_EARTH + final_altitude;
-            a_transfer_expected = (r1 + r2) / 2;
-            v1 = sqrt(MU / r1);
-            v_transfer_1 = sqrt(MU * (2 / r1 - 1 / a_transfer_expected));
-            delta_v_departure_expected = v_transfer_1 - v1;
-            v2 = sqrt(MU / r2);
-            v_transfer_2 = sqrt(MU * (2 / r2 - 1 / a_transfer_expected));
-            delta_v_arrival_expected = v2 - v_transfer_2;
-            total_delta_v_expected = delta_v_departure_expected + delta_v_arrival_expected;
-            transfer_time_expected = pi * sqrt(a_transfer_expected^3 / MU); % seconds
-            
-            % Tolerance for floating-point comparisons
-            tolerance = 1e-6;
-            
-            % Verify semi-major axis
-            testCase.verifyEqual(transfer.a_transfer, a_transfer_expected, 'AbsTol', tolerance);
-            
-            % Verify delta-V for departure burn
-            testCase.verifyEqual(transfer.delta_v_departure, delta_v_departure_expected, 'AbsTol', tolerance);
-            
-            % Verify delta-V for arrival burn
-            testCase.verifyEqual(transfer.delta_v_arrival, delta_v_arrival_expected, 'AbsTol', tolerance);
-            
-            % Verify total delta-V
-            total_delta_v = transfer.delta_v_departure + transfer.delta_v_arrival;
-            testCase.verifyEqual(total_delta_v, total_delta_v_expected, 'AbsTol', tolerance);
-            
-            % Verify transfer time
-            testCase.verifyEqual(transfer.calculateTransferTime(), transfer_time_expected, 'AbsTol', tolerance);
+classdef HohmannTransferTest < matlab.unittest.TestCase
+    % Test class for HohmannTransfer implementation
+    
+    properties (Constant)
+        % Test tolerance for floating-point comparisons
+        EPSILON = 1e-10
+        
+        % Common orbital altitudes (km)
+        LEO_ALTITUDE = 400     % Low Earth Orbit
+        MEO_ALTITUDE = 20200   % Medium Earth Orbit (GPS)
+        GEO_ALTITUDE = 35786   % Geostationary Orbit
+    end
+    
+    properties
+        % Test objects
+        transferLEOtoGEO
+        transferLEOtoMEO
+    end
+    
+    methods(TestMethodSetup)
+        function createTestObjects(testCase)
+            % Create test objects before each test
+            testCase.transferLEOtoGEO = HohmannTransfer(testCase.LEO_ALTITUDE, testCase.GEO_ALTITUDE);
+            testCase.transferLEOtoMEO = HohmannTransfer(testCase.LEO_ALTITUDE, testCase.MEO_ALTITUDE);
+        end
+    end
+    
+    methods(Test)
+        function testConstructorValidation(testCase)
+            % Test input validation
+            testCase.verifyError(@() HohmannTransfer(-100, 1000), 'MATLAB:validators:mustBePositive');
+            testCase.verifyError(@() HohmannTransfer(0, 1000), 'MATLAB:validators:mustBePositive');
+            testCase.verifyError(@() HohmannTransfer(1000, -100), 'MATLAB:validators:mustBePositive');
+            testCase.verifyError(@() HohmannTransfer(1000, 0), 'MATLAB:validators:mustBePositive');
+            testCase.verifyError(@() HohmannTransfer('invalid', 1000), 'MATLAB:validators:mustBeNumeric');
         end
         
-        function testNegativeAltitude(testCase)
-            % Test with negative initial altitude
-            initial_altitude = -500;    % km
-            final_altitude = 2000;      % km
+        function testOrbitalParameters(testCase)
+            % Test orbital radius calculations
+            transfer = testCase.transferLEOtoGEO;
+            R_EARTH = 6378.137;
             
-            % Verify that an error is thrown
-            testCase.verifyError(@() HohmannTransfer(initial_altitude, final_altitude), 'MATLAB:invalid_argument');
+            expectedR1 = testCase.LEO_ALTITUDE + R_EARTH;
+            expectedR2 = testCase.GEO_ALTITUDE + R_EARTH;
+            expectedSMA = (expectedR1 + expectedR2) / 2;
+            
+            testCase.verifyEqual(transfer.r1, expectedR1, 'AbsTol', testCase.EPSILON);
+            testCase.verifyEqual(transfer.r2, expectedR2, 'AbsTol', testCase.EPSILON);
+            testCase.verifyEqual(transfer.a_transfer, expectedSMA, 'AbsTol', testCase.EPSILON);
         end
         
-        function testZeroAltitude(testCase)
-            % Test with zero initial altitude
-            initial_altitude = 0;       % km
-            final_altitude = 2000;      % km
+        function testDeltaVCalculations(testCase)
+            % Test delta-V calculations for LEO to GEO transfer
+            transfer = testCase.transferLEOtoGEO;
+            MU = 398600.4418;
             
-            % Verify that an error is thrown
-            testCase.verifyError(@() HohmannTransfer(initial_altitude, final_altitude), 'MATLAB:invalid_argument');
+            % Manual calculation of expected values
+            r1 = transfer.r1;
+            r2 = transfer.r2;
+            a = transfer.a_transfer;
+            
+            v1 = sqrt(MU/r1);
+            v2 = sqrt(MU/r2);
+            vt1 = sqrt(MU * (2/r1 - 1/a));
+            vt2 = sqrt(MU * (2/r2 - 1/a));
+            
+            expectedDeltaV1 = vt1 - v1;
+            expectedDeltaV2 = v2 - vt2;
+            expectedTotalDeltaV = expectedDeltaV1 + expectedDeltaV2;
+            
+            % Verify calculations
+            testCase.verifyEqual(transfer.delta_v_departure, expectedDeltaV1, 'AbsTol', testCase.EPSILON);
+            testCase.verifyEqual(transfer.delta_v_arrival, expectedDeltaV2, 'AbsTol', testCase.EPSILON);
+            testCase.verifyEqual(transfer.delta_v_total, expectedTotalDeltaV, 'AbsTol', testCase.EPSILON);
         end
         
-        function testSameAltitudes(testCase)
-            % Test transfer between the same altitudes
-            initial_altitude = 500;     % km
-            final_altitude = 500;       % km
+        function testTransferTime(testCase)
+            % Test transfer time calculation
+            transfer = testCase.transferLEOtoGEO;
+            MU = 398600.4418;
             
-            % Create an instance
-            transfer = HohmannTransfer(initial_altitude, final_altitude);
-            
-            % Expected delta-Vs should be zero
-            testCase.verifyEqual(transfer.delta_v_departure, 0, 'AbsTol', 1e-6);
-            testCase.verifyEqual(transfer.delta_v_arrival, 0, 'AbsTol', 1e-6);
-            testCase.verifyEqual(transfer.calculateTransferTime(), 0, 'AbsTol', 1e-6);
+            expectedTime = pi * sqrt(transfer.a_transfer^3 / MU);
+            testCase.verifyEqual(transfer.transfer_time, expectedTime, 'AbsTol', testCase.EPSILON);
         end
         
-        function testHighAltitudeTransfer(testCase)
-            % Test transfer from low Earth orbit to geostationary orbit
-            initial_altitude = 200;       % km
-            final_altitude = 35786;       % km (approximate GEO altitude)
+        function testEdgeCases(testCase)
+            % Test edge cases with very small and large altitude differences
+            % Small altitude change
+            smallTransfer = HohmannTransfer(400, 401);
+            testCase.verifyGreaterThan(smallTransfer.delta_v_total, 0);
+            testCase.verifyLessThan(smallTransfer.delta_v_total, 0.1); % Should be very small
             
-            % Create an instance
-            transfer = HohmannTransfer(initial_altitude, final_altitude);
+            % Large altitude change
+            largeTransfer = HohmannTransfer(400, 100000);
+            testCase.verifyGreaterThan(largeTransfer.delta_v_total, 0);
+            testCase.verifyGreaterThan(largeTransfer.transfer_time, 0);
+        end
+        
+        function testVisualization(testCase)
+            % Test that visualization runs without errors
+            transfer = testCase.transferLEOtoGEO;
             
-            % Expected results (pre-calculated)
-            MU = HohmannTransfer.MU;
-            R_EARTH = HohmannTransfer.R_EARTH;
-            r1 = R_EARTH + initial_altitude;
-            r2 = R_EARTH + final_altitude;
-            a_transfer_expected = (r1 + r2) / 2;
-            transfer_time_expected = pi * sqrt(a_transfer_expected^3 / MU); % seconds
+            % Verify no errors in visualization
+            try
+                fig = figure('Visible', 'off');  % Create invisible figure
+                transfer.visualizeTransfer();
+                close(fig);
+                testCase.verifyTrue(true);  % If we get here, no errors occurred
+            catch
+                testCase.verifyTrue(false, 'Visualization failed');
+            end
+        end
+        
+        function testPhysicalConsistency(testCase)
+            % Test physical consistency of the results
+            transfer = testCase.transferLEOtoMEO;
             
-            % Tolerance
-            tolerance = 1e-6;
+            % Verify basic physical constraints
+            testCase.verifyGreaterThan(transfer.delta_v_total, 0);
+            testCase.verifyGreaterThan(transfer.transfer_time, 0);
             
-            % Verify transfer time
-            testCase.verifyEqual(transfer.calculateTransferTime(), transfer_time_expected, 'AbsTol', tolerance);
+            % Verify that total delta-V is less than direct transfer
+            MU = 398600.4418;
+            directDeltaV = abs(sqrt(MU/transfer.r2) - sqrt(MU/transfer.r1));
+            testCase.verifyLessThan(transfer.delta_v_total, directDeltaV);
         end
     end
 end
