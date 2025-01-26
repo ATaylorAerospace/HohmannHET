@@ -1,142 +1,114 @@
-classdef HohmannTransfer
-    % Calculation Constants
-    properties (Constant)
-        MU = 398600.4418;     % Earth's gravitational parameter (km^3/s^2)
-        R_EARTH = 6378.137;   % Earth's equatorial radius (km)
+classdef HohmannTransfer < handle
+    properties (Constant, Access = private)
+        MU = 398600.4418     % Earth's gravitational parameter (km^3/s^2)
+        R_EARTH = 6378.137   % Earth's equatorial radius (km)
     end
     
-    % Private properties to store transfer orbit parameters
-    properties (Access = private)
+    properties (SetAccess = private)
         r1             % Initial orbital radius (km)
         r2             % Final orbital radius (km)
         a_transfer     % Transfer orbit semi-major axis (km)
-        v1             % Initial orbital velocity (km/s)
+        delta_v_total  % Total delta-V (km/s)
+        transfer_time  % Transfer time (s)
+    end
+    
+    properties (Access = private)
         delta_v_departure  % Delta-V for departure burn (km/s)
         delta_v_arrival    % Delta-V for arrival burn (km/s)
     end
     
     methods
-        % Constructor
         function obj = HohmannTransfer(initial_altitude, final_altitude)
-            % Validate inputs
-            if initial_altitude <= 0 || final_altitude <= 0
-                error('Altitudes must be positive');
-            end
+            validateattributes(initial_altitude, {'numeric'}, {'positive', 'scalar', 'finite'}, 'HohmannTransfer', 'initial_altitude');
+            validateattributes(final_altitude, {'numeric'}, {'positive', 'scalar', 'finite'}, 'HohmannTransfer', 'final_altitude');
             
-            % Calculate orbital radii
-            obj.r1 = obj.R_EARTH + initial_altitude;
-            obj.r2 = obj.R_EARTH + final_altitude;
-            
-            % Calculate transfer orbit semi-major axis
+            % Precompute all values at construction
+            [obj.r1, obj.r2] = deal(obj.R_EARTH + initial_altitude, obj.R_EARTH + final_altitude);
             obj.a_transfer = (obj.r1 + obj.r2) / 2;
             
-            % Calculate initial orbital velocity
-            obj.v1 = sqrt(obj.MU / obj.r1);
+            % Calculate velocities and delta-Vs
+            [obj.delta_v_departure, obj.delta_v_arrival] = obj.computeDeltaVs();
+            obj.delta_v_total = obj.delta_v_departure + obj.delta_v_arrival;
             
-            % Compute delta-V for transfer
-            obj.delta_v_departure = obj.calculateDeltaVDeparture();
-            obj.delta_v_arrival = obj.calculateDeltaVArrival();
+            % Precompute transfer time
+            obj.transfer_time = pi * sqrt(obj.a_transfer^3 / obj.MU);
         end
         
-        % Calculate delta-V for departure burn
-        function delta_v = calculateDeltaVDeparture(obj)
-            v_transfer_1 = sqrt(obj.MU * (2/obj.r1 - 1/obj.a_transfer));
-            delta_v = v_transfer_1 - obj.v1;
-        end
-        
-        % Calculate delta-V for arrival burn
-        function delta_v = calculateDeltaVArrival(obj)
-            % Velocity at final orbit
+        function [delta_v_dep, delta_v_arr] = computeDeltaVs(obj)
+            v1 = sqrt(obj.MU / obj.r1);
             v2 = sqrt(obj.MU / obj.r2);
             
-            % Velocity at transfer orbit apoapsis
+            % Calculate transfer orbit velocities
+            v_transfer_1 = sqrt(obj.MU * (2/obj.r1 - 1/obj.a_transfer));
             v_transfer_2 = sqrt(obj.MU * (2/obj.r2 - 1/obj.a_transfer));
             
-            delta_v = v2 - v_transfer_2;
+            delta_v_dep = v_transfer_1 - v1;
+            delta_v_arr = v2 - v_transfer_2;
         end
         
-        % Calculate transfer time
-        function transfer_time = calculateTransferTime(obj)
-            transfer_time = pi * sqrt(obj.a_transfer^3 / obj.MU);
-        end
-        
-        % Print transfer details
         function printTransferDetails(obj)
-            fprintf('\nHohmann Transfer Orbit Details:\n');
-            fprintf('Initial Orbit Altitude: %.2f km\n', obj.r1 - obj.R_EARTH);
-            fprintf('Final Orbit Altitude: %.2f km\n', obj.r2 - obj.R_EARTH);
-            fprintf('Transfer Orbit Semi-Major Axis: %.2f km\n', obj.a_transfer);
-            fprintf('Delta-V (Departure Burn): %.2f km/s\n', obj.delta_v_departure);
-            fprintf('Delta-V (Arrival Burn): %.2f km/s\n', obj.delta_v_arrival);
-            fprintf('Total Delta-V: %.2f km/s\n', obj.delta_v_departure + obj.delta_v_arrival);
-            fprintf('Transfer Time: %.2f hours\n', obj.calculateTransferTime() / 3600);
+            fprintf(['\nHohmann Transfer Orbit Details:\n', ...
+                    'Initial Orbit Altitude: %.2f km\n', ...
+                    'Final Orbit Altitude: %.2f km\n', ...
+                    'Transfer Orbit Semi-Major Axis: %.2f km\n', ...
+                    'Delta-V (Departure Burn): %.2f km/s\n', ...
+                    'Delta-V (Arrival Burn): %.2f km/s\n', ...
+                    'Total Delta-V: %.2f km/s\n', ...
+                    'Transfer Time: %.2f hours\n'], ...
+                    obj.r1 - obj.R_EARTH, ...
+                    obj.r2 - obj.R_EARTH, ...
+                    obj.a_transfer, ...
+                    obj.delta_v_departure, ...
+                    obj.delta_v_arrival, ...
+                    obj.delta_v_total, ...
+                    obj.transfer_time / 3600);
         end
         
-        % Visualize transfer orbit (similar to Python implementation)
         function visualizeTransfer(obj)
-            % Create figure
-            figure('Position', [100, 100, 1200, 800]);
+            fig = figure('Position', [100, 100, 1200, 800]);
+            ax = axes('Parent', fig);
+            hold(ax, 'on');
+            axis(ax, 'equal');
             
-            % 3D plot setup
-            hold on;
-            axis equal;
+            % Earth representation (more efficient sphere generation)
+            [x, y, z] = sphere(30);
+            earth = surf(ax, obj.R_EARTH * x, obj.R_EARTH * y, obj.R_EARTH * z, ...
+                        'FaceAlpha', 0.1, 'EdgeColor', 'blue', 'DisplayName', 'Earth');
             
-            % Earth representation (wireframe sphere)
-            [x, y, z] = sphere(20);
-            x = x * obj.R_EARTH;
-            y = y * obj.R_EARTH;
-            z = z * obj.R_EARTH;
-            surf(x, y, z, 'FaceAlpha', 0.1, 'EdgeColor', 'blue');
+            % Generate orbit points efficiently
+            theta = linspace(0, 2*pi, 200)';
+            cos_theta = cos(theta);
+            sin_theta = sin(theta);
             
-            % Orbit visualization
-            theta = linspace(0, 2*pi, 100);
+            % Plot orbits using vectorized operations
+            plot3(ax, obj.r1 * cos_theta, obj.r1 * sin_theta, zeros(size(theta)), ...
+                  'g-', 'LineWidth', 2, 'DisplayName', 'Initial Orbit');
+            plot3(ax, obj.r2 * cos_theta, obj.r2 * sin_theta, zeros(size(theta)), ...
+                  'r-', 'LineWidth', 2, 'DisplayName', 'Final Orbit');
             
-            % Initial orbit
-            orbit1_x = obj.r1 * cos(theta);
-            orbit1_y = obj.r1 * sin(theta);
-            plot3(orbit1_x, orbit1_y, zeros(size(theta)), 'g-', 'LineWidth', 2, 'DisplayName', 'Initial Orbit');
-            
-            % Final orbit
-            orbit2_x = obj.r2 * cos(theta);
-            orbit2_y = obj.r2 * sin(theta);
-            plot3(orbit2_x, orbit2_y, zeros(size(theta)), 'r-', 'LineWidth', 2, 'DisplayName', 'Final Orbit');
-            
-            % Labeling
-            xlabel('X (km)');
-            ylabel('Y (km)');
-            zlabel('Z (km)');
-            title('Hohmann Transfer Orbit');
-            legend('show');
-            
-            hold off;
-            view(45, 20);
+            % Set visualization properties
+            xlabel(ax, 'X (km)');
+            ylabel(ax, 'Y (km)');
+            zlabel(ax, 'Z (km)');
+            title(ax, 'Hohmann Transfer Orbit');
+            legend(ax, 'show');
+            view(ax, [45, 20]);
+            grid(ax, 'on');
         end
     end
     
-    % Static method for user interaction
     methods (Static)
         function main()
             try
-                % User inputs
                 initial_alt = input('Enter initial orbit altitude (km): ');
                 final_alt = input('Enter final orbit altitude (km): ');
                 
-                % Create Hohmann transfer object
                 transfer = HohmannTransfer(initial_alt, final_alt);
-                
-                % Print transfer details
                 transfer.printTransferDetails();
-                
-                % Visualize transfer
                 transfer.visualizeTransfer();
             catch ME
-                % Error handling
                 fprintf('Error: %s\n', ME.message);
-                fprintf('Please enter valid numerical inputs.\n');
             end
         end
     end
 end
-
-% Optional: Uncomment the line below to run directly
-% HohmannTransfer.main();
