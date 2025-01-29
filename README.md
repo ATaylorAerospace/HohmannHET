@@ -72,7 +72,7 @@ Final Orbit Altitude: 35,786.00 km
 Transfer Orbit Semi-Major Axis: 23,093.07 km
 Delta-V (Departure Burn): 1.80 km/s
 Delta-V (Arrival Burn): 2.44 km/s
-Total Delta-V: 4.24 km/s
+Total Delta-V: 3.18604 km/s
 Transfer Time: 12.54 hours
 ```
 
