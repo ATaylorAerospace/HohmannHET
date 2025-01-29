@@ -95,5 +95,18 @@ The 3D plot will show:
 
 ## License
 
-This project is open-sourced under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is open-sourced under the MIT License. 
+
+## Citation 
+
+If you use this repository in your research, please cite it as:
+
+```bibtex
+@misc{ATaylor_HohmannTransferOrbitAnalysis_2024,
+  author       = {A. Taylor},
+  title        = {Hohmann Transfer Orbit Analysis},
+  year         = {2024},
+  url          = {[https://github.com/ATaylorAerospace/HohmannHET]},
+  note         = {Accessed: YYYY-MM-DD}
+}
 ```
