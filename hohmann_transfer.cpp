@@ -18,7 +18,7 @@ private:
     const double delta_v_departure;  // Delta-V for departure burn (km/s)
     const double delta_v_arrival;    // Delta-V for arrival burn (km/s)
 
-    // Calculate all velocities and delta-Vs at construction
+    // Calculate all velocities,  delta-Vs at construction
     static std::tuple<double, double> calculateDeltaVs(double r1, double r2, double a_transfer, double v1) {
         // Calculate transfer orbit velocities
         double v_transfer_1 = std::sqrt(MU * (2.0/r1 - 1.0/a_transfer));
