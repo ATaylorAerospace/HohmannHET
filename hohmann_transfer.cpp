@@ -12,7 +12,7 @@ namespace {
 class HohmannTransfer {
 private:
     const double r1;            // Initial orbital radius (km)
-    const double r2;            // Final orbital radius (km)
+    const double r2;            // Final orbit radius (km)
     const double a_transfer;    // Transfer orbit semi-major axis (km)
     const double v1;            // Initial orbital velocity (km/s)
     const double delta_v_departure;  // Delta-V for departure burn (km/s)
