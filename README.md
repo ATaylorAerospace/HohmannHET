@@ -1,111 +1,74 @@
-### Hohmann Transfer Orbit Analysis 
+###  🚀 Hohmann Transfer with Hall Effect Thrusters (HohmannHET)
 
-### Overview 
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Stars](https://img.shields.io/github/stars/ATaylorAerospace/HohmannHET?style=social)](https://github.com/ATaylorAerospace/HohmannHET)
+[![Language](https://img.shields.io/badge/Languages-Python%20%7C%20C%2B%2B%20%7C%20MATLAB-brightgreen)](https://github.com/ATaylorAerospace/HohmannHET)
 
-This script provides a comprehensive tool for calculating and visualizing orbital transfers around Earth. It specifically focuses on the most energy-efficient method of transferring a spacecraft between two circular orbits using minimal propulsive maneuvers.
+## 📋 Overview
 
-### Features 
+**HohmannHET** is a comprehensive multi-language toolkit for calculating and visualizing Hohmann transfer orbits around Earth. This repository provides highly optimized implementations in **Python**, **C++**, and **MATLAB**, specifically designed for analyzing the most energy-efficient orbital transfer maneuvers between circular orbits.
 
-### Precise Orbital Transfer Calculations
-- Compute delta-v (velocity change) for departure and arrival burns.
-- Calculate transfer orbit semi-major axis.
-- Determine total transfer time.
+The project focuses on precision, performance, and educational value, making it suitable for both academic research and practical aerospace applications.
 
-### Interactive Analysis
-- User-friendly input for initial and final orbit altitudes.
-- Detailed printout of transfer orbit parameters.
+---
 
-### 3D Visualization
-- Graphical representation of Earth.
-- Plotting of initial and final orbital trajectories.
-- Visual understanding of the transfer orbit.
+## ✨ Key Features
 
-### Dependencies 
+### 🎯 **Precise Orbital Mechanics Calculations**
+- **Delta-V Computation**: Calculate velocity changes for departure and arrival burns
+- **Transfer Orbit Analysis**: Determine semi-major axis and orbital parameters
+- **Time Optimization**: Compute total transfer duration with high precision
+- **Multi-Scenario Support**: Handle LEO-to-GEO, reverse transfers, and custom altitudes
 
-- `numpy`: Numerical computing library.
-- `matplotlib`: Plotting and visualization.
-- `scipy`: Scientific computing tools (specifically for constants).
+### 🔧 **Multi-Language Implementation**
+- **Python**: Ultra-optimized with NumPy vectorization and matplotlib visualization
+- **C++**: High-performance implementation with comprehensive Google Test suite
+- **MATLAB**: Educational-friendly version for academic environments
 
-## Mathematical Foundations
+### 📊 **Advanced Visualization**
+- **3D Orbital Plots**: Interactive Earth representation with orbital trajectories
+- **Transfer Path Visualization**: Clear depiction of elliptical transfer orbits
+- **Performance Optimized**: Reduced rendering overhead for faster plotting
 
-The script leverages key celestial mechanics principles:
-- **Gravitational Parameter (μ):** 398,600.4418 km³/s².
-- **Earth's Equatorial Radius:** 6,378.137 km.
+### 🧪 **Testing & Validation**
+- **Comprehensive Test Suite**: 15+ test cases covering edge cases and boundary conditions
+- **Performance Benchmarks**: Sub-millisecond calculation times
+- **Mathematical Validation**: Verified against known LEO-to-GEO transfer values
 
-### Transfer Orbit Calculations
-- Semi-major axis computation.
-- Orbital velocity calculations.
-- Delta-v budget analysis.
+---
 
-## Installation
+## 🛠️ Technical Specifications
 
-1. Ensure you have Python 3.x installed.
-2. Install required dependencies:
+### **Physical Constants**
+| Parameter | Value | Unit |
+|-----------|-------|------|
+| Earth's Gravitational Parameter (μ) | 398,600.4418 | km³/s² |
+| Earth's Equatorial Radius | 6,378.137 | km |
+| Calculation Precision | 1e-6 | - |
 
-   ```bash
-   pip install numpy matplotlib scipy
-   ```
+### **Supported Transfer Types**
+- ✅ Low Earth Orbit (LEO) to Geostationary Orbit (GEO)
+- ✅ Reverse transfers (GEO to LEO)
+- ✅ Custom altitude transfers
+- ✅ Same-altitude validation (zero delta-V)
+- ✅ Extreme altitude differences (up to 100,000 km)
 
-** Usage **
+---
 
-Run the script:
+## 🚀 Quick Start
+
+#### Prerequisites
 
 ```bash
-python hohmann_transfer.py
+pip install numpy matplotlib scipy
 ```
 
-When prompted, input:
-- **Initial orbit altitude** (in kilometers).
-- **Final orbit altitude** (in kilometers).
-
-The script will:
-- Calculate transfer parameters.
-- Display detailed transfer information.
-- Generate a 3D orbit visualization.
-
-## Example Output
-
+#### Citations
 ```
-Hohmann Transfer Orbit Details:
-Initial Orbit Altitude: 500.00 km
-Final Orbit Altitude: 35,786.00 km
-Transfer Orbit Semi-Major Axis: 23,093.07 km
-Delta-V (Departure Burn): 1.80 km/s
-Delta-V (Arrival Burn): 2.44 km/s
-Total Delta-V: 3.18604 km/s
-Transfer Time: 12.54 hours
-```
-
-### Visualization
-
-The 3D plot will show:
-- Earth's spherical representation.
-- Initial orbit trajectory.
-- Final orbit trajectory.
-- Transfer orbit path.
-
-## Limitations
-
-- Currently supports transfers around Earth.
-- Assumes circular orbits.
-- Does not account for extremely complex gravitational interactions prior to insertion.
-
-## Contributing
-
-
-## License
-
-This project is open-sourced under the MIT License. 
-
-## Citation 
-
-If you use this repository in your research, please cite it as:
-
-```bibtex
 @misc{ATaylor_HohmannTransferOrbitAnalysis_2024,
   author       = {A. Taylor},
   title        = {Hohmann Transfer Orbit Analysis},
-  year         = {2024},
+  year         = {2025},
   url          = {[https://github.com/ATaylorAerospace/HohmannHET]},
   note         = {Accessed: YYYY-MM-DD}
 }
