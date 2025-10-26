@@ -15,7 +15,7 @@ The project focuses on precision, performance, and educational value, making it 
 ## ✨ Key Features
 
 ### 🎯 **Precise Orbital Mechanics Calculations**
-- **Delta-V Computation**: Calculate velocity changes for departure and arrival burns
+- **Delta-V Computation**: Calculate accurate velocity changes for departure and arrival burns
 - **Transfer Orbit Analysis**: Determine semi-major axis and orbital parameters
 - **Time Optimization**: Compute total transfer duration with high precision
 - **Multi-Scenario Support**: Handle LEO-to-GEO, reverse transfers, and custom altitudes
