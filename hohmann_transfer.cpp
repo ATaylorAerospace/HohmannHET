@@ -63,23 +63,24 @@ public:
         return delta_v_departure + delta_v_arrival; 
     }
 
-    // Optimized print function with single stream operation
+    // Buffer all output then write in one shot to minimize syscall overhead
     void printTransferDetails() const {
         using namespace orbital_constants;
-        
-        const double total_delta_v = getTotalDeltaV();
+
+        const double total_delta_v  = getTotalDeltaV();
         const double transfer_hours = transfer_time * INV_3600;
-        
-        // Single formatted output for better performance
-        std::cout << std::fixed << std::setprecision(2)
-                  << "\nHohmann Transfer Orbit Details:\n"
-                     "Initial Orbit Altitude: " << (r1 - R_EARTH) << " km\n"
-                     "Final Orbit Altitude: " << (r2 - R_EARTH) << " km\n"
-                     "Transfer Orbit Semi-Major Axis: " << a_transfer << " km\n"
-                     "Delta-V (Departure Burn): " << delta_v_departure << " km/s\n"
-                     "Delta-V (Arrival Burn): " << delta_v_arrival << " km/s\n"
-                     "Total Delta-V: " << total_delta_v << " km/s\n"
-                     "Transfer Time: " << transfer_hours << " hours\n";
+
+        std::ostringstream oss;
+        oss << std::fixed << std::setprecision(2)
+            << "\nHohmann Transfer Orbit Details:\n"
+               "Initial Orbit Altitude: "         << (r1 - R_EARTH)       << " km\n"
+               "Final Orbit Altitude: "           << (r2 - R_EARTH)       << " km\n"
+               "Transfer Orbit Semi-Major Axis: " << a_transfer           << " km\n"
+               "Delta-V (Departure Burn): "       << delta_v_departure    << " km/s\n"
+               "Delta-V (Arrival Burn): "         << delta_v_arrival      << " km/s\n"
+               "Total Delta-V: "                  << total_delta_v        << " km/s\n"
+               "Transfer Time: "                  << transfer_hours       << " hours\n";
+        std::cout << oss.str();
     }
 };
 
