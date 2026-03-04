@@ -73,7 +73,7 @@ classdef HohmannTransferOptimized < handle
             obj.delta_v_total     = obj.delta_v_departure + obj.delta_v_arrival;
 
             % Precompute transfer time and hours conversion
-            obj.transfer_time  = pi * sqrt(obj.a_transfer^3 / obj.MU);
+            obj.transfer_time  = pi * obj.a_transfer * sqrt(obj.a_transfer / obj.MU);
             obj.transfer_hours = obj.transfer_time * obj.INV_3600;
         end
         
