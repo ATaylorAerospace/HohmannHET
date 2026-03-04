@@ -18,10 +18,9 @@ ORBIT_POINTS = 80         # Reduced from 100 for faster plotting
 class HohmannTransferOptimized:
     """Ultra-efficient implementation of Hohmann transfer calculations"""
     
-    __slots__ = ('r1', 'r2', 'a_transfer', 'v1', 'delta_v_departure', 
-                 'delta_v_arrival', 'total_delta_v', 'transfer_time', 
-                 'transfer_hours', '_initial_alt', '_final_alt',
-                 '_cos_theta', '_sin_theta', '_zeros')
+    __slots__ = ('r1', 'r2', 'a_transfer', 'v1', 'delta_v_departure',
+                 'delta_v_arrival', 'total_delta_v', 'transfer_time',
+                 'transfer_hours', '_initial_alt', '_final_alt')
     
     def __init__(self, initial_altitude: float, final_altitude: float):
         """
@@ -44,11 +43,8 @@ class HohmannTransferOptimized:
         self.r2 = R_EARTH + final_altitude
         self.a_transfer = (self.r1 + self.r2) * 0.5
         
-        # Vectorized velocity calculations
+        # Compute all orbital parameters
         self._compute_all_values()
-        
-        # Precompute visualization arrays
-        self._precompute_visualization()
 
     def _compute_all_values(self) -> None:
         """Compute all orbital parameters using scalar arithmetic"""
@@ -67,13 +63,6 @@ class HohmannTransferOptimized:
 
         self.transfer_time = math.pi * self.a_transfer * math.sqrt(self.a_transfer / MU)
         self.transfer_hours = self.transfer_time * INV_3600
-
-    def _precompute_visualization(self) -> None:
-        """Precompute trigonometric values for visualization"""
-        theta = np.linspace(0, 2*np.pi, ORBIT_POINTS)
-        self._cos_theta = np.cos(theta)
-        self._sin_theta = np.sin(theta)
-        self._zeros = np.zeros_like(theta)
 
     def visualize_transfer(self) -> Figure:
         """
@@ -101,10 +90,15 @@ class HohmannTransferOptimized:
         ax.plot_surface(x, y, z, color='blue', alpha=0.15, 
                        linewidth=0, antialiased=False, shade=False)
         
-        # Plot orbits using precomputed trigonometric values
-        ax.plot(self.r1 * self._cos_theta, self.r1 * self._sin_theta, self._zeros, 
+        # Compute orbit trig arrays on demand (only when visualizing)
+        orbit_theta = np.linspace(0, 2*np.pi, ORBIT_POINTS)
+        cos_orbit = np.cos(orbit_theta)
+        sin_orbit = np.sin(orbit_theta)
+        zeros_orbit = np.zeros_like(orbit_theta)
+
+        ax.plot(self.r1 * cos_orbit, self.r1 * sin_orbit, zeros_orbit,
                label='Initial Orbit', color='green', linewidth=2)
-        ax.plot(self.r2 * self._cos_theta, self.r2 * self._sin_theta, self._zeros,
+        ax.plot(self.r2 * cos_orbit, self.r2 * sin_orbit, zeros_orbit,
                label='Final Orbit', color='red', linewidth=2)
         
         # Add transfer orbit ellipse
