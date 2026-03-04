@@ -21,48 +21,37 @@ private:
     const double r1, r2, a_transfer, v1;
     const double delta_v_departure, delta_v_arrival, transfer_time;
 
-    // Optimized calculation with fewer sqrt operations
-    static constexpr std::tuple<double, double, double> calculateValues(
-        double r1, double r2, double a_transfer, double v1) noexcept {
-        
+    // All orbital parameters computed in a single pass
+    struct ComputedState {
+        double r1, r2, a_transfer, v1;
+        double dv_dep, dv_arr, t_transfer;
+    };
+
+    static ComputedState compute(double init_alt, double final_alt) {
         using namespace orbital_constants;
-        
-        // Pre-compute common terms
-        const double sqrt_mu_r1 = SQRT_MU / std::sqrt(r1);
-        const double sqrt_mu_r2 = SQRT_MU / std::sqrt(r2);
-        const double sqrt_mu_a = SQRT_MU / std::sqrt(a_transfer);
-        
-        // Optimized velocity calculations
-        const double v_transfer_1 = sqrt_mu_r1 * std::sqrt(2.0 - r1 / a_transfer);
-        const double v_transfer_2 = sqrt_mu_r2 * std::sqrt(2.0 - r2 / a_transfer);
-        const double v2 = sqrt_mu_r2;
-        
-        // Optimized transfer time calculation
-        const double a_cubed_half = a_transfer * std::sqrt(a_transfer);
-        const double transfer_time = PI * a_cubed_half / SQRT_MU;
-        
-        return {v_transfer_1 - v1, v2 - v_transfer_2, transfer_time};
+        if (init_alt <= 0.0 || final_alt <= 0.0)
+            throw std::invalid_argument("Altitudes must be positive");
+        const double r1_  = init_alt  + R_EARTH;
+        const double r2_  = final_alt + R_EARTH;
+        const double a_   = (r1_ + r2_) * 0.5;
+        const double vc1  = SQRT_MU / std::sqrt(r1_);   // circular velocity at r1
+        const double vc2  = SQRT_MU / std::sqrt(r2_);   // circular velocity at r2
+        const double vt1  = vc1 * std::sqrt(2.0 - r1_ / a_); // transfer velocity at r1
+        const double vt2  = vc2 * std::sqrt(2.0 - r2_ / a_); // transfer velocity at r2
+        const double t    = PI * a_ * std::sqrt(a_) / SQRT_MU;
+        return {r1_, r2_, a_, vc1, vt1 - vc1, vc2 - vt2, t};
     }
 
-    // Validate inputs at compile time when possible
-    static constexpr void validateAltitudes(double initial_alt, double final_alt) {
-        if (initial_alt <= 0.0 || final_alt <= 0.0) {
-            throw std::invalid_argument("Altitudes must be positive");
-        }
-    }
+    explicit HohmannTransfer(ComputedState s) noexcept
+        : r1(s.r1), r2(s.r2), a_transfer(s.a_transfer), v1(s.v1)
+        , delta_v_departure(s.dv_dep)
+        , delta_v_arrival(s.dv_arr)
+        , transfer_time(s.t_transfer)
+    {}
 
 public:
-    constexpr HohmannTransfer(double initial_altitude, double final_altitude) 
-        : r1(initial_altitude + orbital_constants::R_EARTH)
-        , r2(final_altitude + orbital_constants::R_EARTH)
-        , a_transfer((r1 + r2) * 0.5)
-        , v1(orbital_constants::SQRT_MU / std::sqrt(r1))
-        , delta_v_departure([&]() {
-            validateAltitudes(initial_altitude, final_altitude);
-            return std::get<0>(calculateValues(r1, r2, a_transfer, v1));
-        }())
-        , delta_v_arrival(std::get<1>(calculateValues(r1, r2, a_transfer, v1)))
-        , transfer_time(std::get<2>(calculateValues(r1, r2, a_transfer, v1)))
+    explicit HohmannTransfer(double initial_altitude, double final_altitude)
+        : HohmannTransfer(compute(initial_altitude, final_altitude))
     {}
 
     // Inline getters with noexcept and nodiscard
