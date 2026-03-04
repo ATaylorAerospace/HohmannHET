@@ -209,7 +209,7 @@ TEST_F(HohmannTransferTest, PrintFunctionOutput) {
     const HohmannTransfer transfer(LEO_ALTITUDE, GEO_ALTITUDE);
 
     std::ostringstream captured_output;
-    const std::streambuf* orig = std::cout.rdbuf();
+    std::streambuf* orig = std::cout.rdbuf();
     std::cout.rdbuf(captured_output.rdbuf());
 
     transfer.printTransferDetails();
