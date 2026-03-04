@@ -1,3 +1,4 @@
+import math
 import numpy as np
 from typing import Tuple, Optional
 import matplotlib.pyplot as plt
@@ -50,27 +51,21 @@ class HohmannTransferOptimized:
         self._precompute_visualization()
 
     def _compute_all_values(self) -> None:
-        """Compute all orbital parameters in one vectorized pass"""
-        # Vectorized calculations using numpy arrays
-        radii = np.array([self.r1, self.r2])
-        mu_over_r = MU / radii
-        v_circular = np.sqrt(mu_over_r)  # [v1, v2]
-        
-        self.v1 = v_circular[0]
-        
-        # Transfer orbit velocities using optimized calculations
-        mu_2_over_r = 2.0 * mu_over_r
+        """Compute all orbital parameters using scalar arithmetic"""
+        # math.sqrt on scalars avoids numpy array allocation/dispatch overhead
         mu_over_a = MU / self.a_transfer
-        
-        v_transfer = np.sqrt(mu_2_over_r - mu_over_a)  # [v_transfer_1, v_transfer_2]
-        
-        # Delta-V calculations
-        self.delta_v_departure = v_transfer[0] - v_circular[0]
-        self.delta_v_arrival = v_circular[1] - v_transfer[1]
+
+        vc1 = math.sqrt(MU / self.r1)                    # circular velocity at r1
+        vc2 = math.sqrt(MU / self.r2)                    # circular velocity at r2
+        vt1 = math.sqrt(2.0 * MU / self.r1 - mu_over_a) # transfer velocity at r1
+        vt2 = math.sqrt(2.0 * MU / self.r2 - mu_over_a) # transfer velocity at r2
+
+        self.v1 = vc1
+        self.delta_v_departure = vt1 - vc1
+        self.delta_v_arrival = vc2 - vt2
         self.total_delta_v = self.delta_v_departure + self.delta_v_arrival
-        
-        # Precompute transfer time
-        self.transfer_time = np.pi * np.sqrt(self.a_transfer**3 / MU)
+
+        self.transfer_time = math.pi * math.sqrt(self.a_transfer**3 / MU)
         self.transfer_hours = self.transfer_time * INV_3600
 
     def _precompute_visualization(self) -> None:
