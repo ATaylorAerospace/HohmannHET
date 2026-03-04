@@ -23,11 +23,6 @@ classdef HohmannTransferOptimized < handle
     properties (Access = private)
         delta_v_departure  % Delta-V for departure burn (km/s)
         delta_v_arrival    % Delta-V for arrival burn (km/s)
-        
-        % Cached trigonometric values for visualization
-        cos_theta
-        sin_theta
-        zeros_array
     end
     
     methods
@@ -53,38 +48,25 @@ classdef HohmannTransferOptimized < handle
             
             % Calculate all values in one pass
             obj.computeAllValues();
-            
-            % Precompute trigonometric values for visualization
-            obj.precomputeTrigValues();
         end
         
         function computeAllValues(obj)
-            % Vectorized calculations where possible
-            mu_over_r = obj.MU ./ [obj.r1, obj.r2];
-            v_circular = sqrt(mu_over_r);  % [v1, v2]
-            
-            % Transfer orbit velocities using optimized calculations
-            mu_2_over_r = 2 * mu_over_r;  % [2*MU/r1, 2*MU/r2]
+            % Scalar arithmetic avoids the overhead of 2-element array allocation
             mu_over_a = obj.MU / obj.a_transfer;
-            
-            v_transfer = sqrt(mu_2_over_r - mu_over_a);  % [v_transfer_1, v_transfer_2]
-            
+
+            vc1 = sqrt(obj.MU / obj.r1);                   % circular velocity at r1
+            vc2 = sqrt(obj.MU / obj.r2);                   % circular velocity at r2
+            vt1 = sqrt(2 * obj.MU / obj.r1 - mu_over_a);  % transfer velocity at r1
+            vt2 = sqrt(2 * obj.MU / obj.r2 - mu_over_a);  % transfer velocity at r2
+
             % Delta-V calculations
-            obj.delta_v_departure = v_transfer(1) - v_circular(1);
-            obj.delta_v_arrival = v_circular(2) - v_transfer(2);
-            obj.delta_v_total = obj.delta_v_departure + obj.delta_v_arrival;
-            
+            obj.delta_v_departure = vt1 - vc1;
+            obj.delta_v_arrival   = vc2 - vt2;
+            obj.delta_v_total     = obj.delta_v_departure + obj.delta_v_arrival;
+
             % Precompute transfer time and hours conversion
-            obj.transfer_time = pi * sqrt(obj.a_transfer^3 / obj.MU);
+            obj.transfer_time  = pi * obj.a_transfer * sqrt(obj.a_transfer / obj.MU);
             obj.transfer_hours = obj.transfer_time * obj.INV_3600;
-        end
-        
-        function precomputeTrigValues(obj)
-            % Precompute trigonometric values for visualization
-            theta = linspace(0, 2*pi, obj.ORBIT_POINTS)';
-            obj.cos_theta = cos(theta);
-            obj.sin_theta = sin(theta);
-            obj.zeros_array = zeros(size(theta));
         end
         
         function printTransferDetails(obj)
@@ -120,10 +102,15 @@ classdef HohmannTransferOptimized < handle
                 'FaceAlpha', 0.1, 'EdgeColor', 'none', 'FaceColor', 'blue', ...
                 'DisplayName', 'Earth');
             
-            % Plot orbits using precomputed trigonometric values
-            plot3(ax, obj.r1 * obj.cos_theta, obj.r1 * obj.sin_theta, obj.zeros_array, ...
+            % Compute orbit arrays on demand (only when visualizing)
+            orbit_theta  = linspace(0, 2*pi, obj.ORBIT_POINTS)';
+            cos_orbit    = cos(orbit_theta);
+            sin_orbit    = sin(orbit_theta);
+            zeros_orbit  = zeros(size(orbit_theta));
+
+            plot3(ax, obj.r1 * cos_orbit, obj.r1 * sin_orbit, zeros_orbit, ...
                   'g-', 'LineWidth', 2, 'DisplayName', 'Initial Orbit');
-            plot3(ax, obj.r2 * obj.cos_theta, obj.r2 * obj.sin_theta, obj.zeros_array, ...
+            plot3(ax, obj.r2 * cos_orbit, obj.r2 * sin_orbit, zeros_orbit, ...
                   'r-', 'LineWidth', 2, 'DisplayName', 'Final Orbit');
             
             % Optimized transfer orbit (ellipse)
@@ -146,7 +133,7 @@ classdef HohmannTransferOptimized < handle
             % Semi-major and semi-minor axes
             a = obj.a_transfer;
             c = abs(obj.r2 - obj.r1) * 0.5;  % Distance from center to focus
-            b = sqrt(a^2 - c^2);  % Semi-minor axis
+            b = sqrt(a*a - c*c);  % Semi-minor axis
             
             % Ellipse coordinates (centered, then translated)
             x_ellipse = a * cos(theta_transfer);

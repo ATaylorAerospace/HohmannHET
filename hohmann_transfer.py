@@ -1,3 +1,4 @@
+import math
 import numpy as np
 from typing import Tuple, Optional
 import matplotlib.pyplot as plt
@@ -17,10 +18,9 @@ ORBIT_POINTS = 80         # Reduced from 100 for faster plotting
 class HohmannTransferOptimized:
     """Ultra-efficient implementation of Hohmann transfer calculations"""
     
-    __slots__ = ('r1', 'r2', 'a_transfer', 'v1', 'delta_v_departure', 
-                 'delta_v_arrival', 'total_delta_v', 'transfer_time', 
-                 'transfer_hours', '_initial_alt', '_final_alt',
-                 '_cos_theta', '_sin_theta', '_zeros')
+    __slots__ = ('r1', 'r2', 'a_transfer', 'v1', 'delta_v_departure',
+                 'delta_v_arrival', 'total_delta_v', 'transfer_time',
+                 'transfer_hours', '_initial_alt', '_final_alt')
     
     def __init__(self, initial_altitude: float, final_altitude: float):
         """
@@ -43,42 +43,26 @@ class HohmannTransferOptimized:
         self.r2 = R_EARTH + final_altitude
         self.a_transfer = (self.r1 + self.r2) * 0.5
         
-        # Vectorized velocity calculations
+        # Compute all orbital parameters
         self._compute_all_values()
-        
-        # Precompute visualization arrays
-        self._precompute_visualization()
 
     def _compute_all_values(self) -> None:
-        """Compute all orbital parameters in one vectorized pass"""
-        # Vectorized calculations using numpy arrays
-        radii = np.array([self.r1, self.r2])
-        mu_over_r = MU / radii
-        v_circular = np.sqrt(mu_over_r)  # [v1, v2]
-        
-        self.v1 = v_circular[0]
-        
-        # Transfer orbit velocities using optimized calculations
-        mu_2_over_r = 2.0 * mu_over_r
+        """Compute all orbital parameters using scalar arithmetic"""
+        # math.sqrt on scalars avoids numpy array allocation/dispatch overhead
         mu_over_a = MU / self.a_transfer
-        
-        v_transfer = np.sqrt(mu_2_over_r - mu_over_a)  # [v_transfer_1, v_transfer_2]
-        
-        # Delta-V calculations
-        self.delta_v_departure = v_transfer[0] - v_circular[0]
-        self.delta_v_arrival = v_circular[1] - v_transfer[1]
-        self.total_delta_v = self.delta_v_departure + self.delta_v_arrival
-        
-        # Precompute transfer time
-        self.transfer_time = np.pi * np.sqrt(self.a_transfer**3 / MU)
-        self.transfer_hours = self.transfer_time * INV_3600
 
-    def _precompute_visualization(self) -> None:
-        """Precompute trigonometric values for visualization"""
-        theta = np.linspace(0, 2*np.pi, ORBIT_POINTS)
-        self._cos_theta = np.cos(theta)
-        self._sin_theta = np.sin(theta)
-        self._zeros = np.zeros_like(theta)
+        vc1 = math.sqrt(MU / self.r1)                    # circular velocity at r1
+        vc2 = math.sqrt(MU / self.r2)                    # circular velocity at r2
+        vt1 = math.sqrt(2.0 * MU / self.r1 - mu_over_a) # transfer velocity at r1
+        vt2 = math.sqrt(2.0 * MU / self.r2 - mu_over_a) # transfer velocity at r2
+
+        self.v1 = vc1
+        self.delta_v_departure = vt1 - vc1
+        self.delta_v_arrival = vc2 - vt2
+        self.total_delta_v = self.delta_v_departure + self.delta_v_arrival
+
+        self.transfer_time = math.pi * self.a_transfer * math.sqrt(self.a_transfer / MU)
+        self.transfer_hours = self.transfer_time * INV_3600
 
     def visualize_transfer(self) -> Figure:
         """
@@ -106,10 +90,15 @@ class HohmannTransferOptimized:
         ax.plot_surface(x, y, z, color='blue', alpha=0.15, 
                        linewidth=0, antialiased=False, shade=False)
         
-        # Plot orbits using precomputed trigonometric values
-        ax.plot(self.r1 * self._cos_theta, self.r1 * self._sin_theta, self._zeros, 
+        # Compute orbit trig arrays on demand (only when visualizing)
+        orbit_theta = np.linspace(0, 2*np.pi, ORBIT_POINTS)
+        cos_orbit = np.cos(orbit_theta)
+        sin_orbit = np.sin(orbit_theta)
+        zeros_orbit = np.zeros_like(orbit_theta)
+
+        ax.plot(self.r1 * cos_orbit, self.r1 * sin_orbit, zeros_orbit,
                label='Initial Orbit', color='green', linewidth=2)
-        ax.plot(self.r2 * self._cos_theta, self.r2 * self._sin_theta, self._zeros,
+        ax.plot(self.r2 * cos_orbit, self.r2 * sin_orbit, zeros_orbit,
                label='Final Orbit', color='red', linewidth=2)
         
         # Add transfer orbit ellipse
@@ -158,23 +147,6 @@ Delta-V (Departure Burn): {self.delta_v_departure:.2f} km/s
 Delta-V (Arrival Burn): {self.delta_v_arrival:.2f} km/s
 Total Delta-V: {self.total_delta_v:.2f} km/s
 Transfer Time: {self.transfer_hours:.2f} hours""")
-
-    # Property-style getters for better performance than methods
-    @property
-    def departure_delta_v(self) -> float:
-        return self.delta_v_departure
-    
-    @property
-    def arrival_delta_v(self) -> float:
-        return self.delta_v_arrival
-    
-    @property
-    def total_delta_v_property(self) -> float:
-        return self.total_delta_v
-    
-    @property
-    def transfer_time_hours(self) -> float:
-        return self.transfer_hours
 
 def get_valid_input(prompt: str) -> float:
     """Optimized input validation with minimal overhead"""
