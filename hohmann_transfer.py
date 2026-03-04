@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
 
-# Module-level constants for better performance (avoid dataclass overhead)
+# Module-level constants for better performance (avoid data class overhead)
 MU = 398600.4418      # Earth's gravitational parameter (km^3/s^2)
 R_EARTH = 6378.137    # Earth's equatorial radius (km)
 INV_3600 = 1.0 / 3600.0  # Precomputed hours conversion constant
