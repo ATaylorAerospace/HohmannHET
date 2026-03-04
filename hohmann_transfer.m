@@ -59,23 +59,21 @@ classdef HohmannTransferOptimized < handle
         end
         
         function computeAllValues(obj)
-            % Vectorized calculations where possible
-            mu_over_r = obj.MU ./ [obj.r1, obj.r2];
-            v_circular = sqrt(mu_over_r);  % [v1, v2]
-            
-            % Transfer orbit velocities using optimized calculations
-            mu_2_over_r = 2 * mu_over_r;  % [2*MU/r1, 2*MU/r2]
+            % Scalar arithmetic avoids the overhead of 2-element array allocation
             mu_over_a = obj.MU / obj.a_transfer;
-            
-            v_transfer = sqrt(mu_2_over_r - mu_over_a);  % [v_transfer_1, v_transfer_2]
-            
+
+            vc1 = sqrt(obj.MU / obj.r1);                   % circular velocity at r1
+            vc2 = sqrt(obj.MU / obj.r2);                   % circular velocity at r2
+            vt1 = sqrt(2 * obj.MU / obj.r1 - mu_over_a);  % transfer velocity at r1
+            vt2 = sqrt(2 * obj.MU / obj.r2 - mu_over_a);  % transfer velocity at r2
+
             % Delta-V calculations
-            obj.delta_v_departure = v_transfer(1) - v_circular(1);
-            obj.delta_v_arrival = v_circular(2) - v_transfer(2);
-            obj.delta_v_total = obj.delta_v_departure + obj.delta_v_arrival;
-            
+            obj.delta_v_departure = vt1 - vc1;
+            obj.delta_v_arrival   = vc2 - vt2;
+            obj.delta_v_total     = obj.delta_v_departure + obj.delta_v_arrival;
+
             % Precompute transfer time and hours conversion
-            obj.transfer_time = pi * sqrt(obj.a_transfer^3 / obj.MU);
+            obj.transfer_time  = pi * sqrt(obj.a_transfer^3 / obj.MU);
             obj.transfer_hours = obj.transfer_time * obj.INV_3600;
         end
         
