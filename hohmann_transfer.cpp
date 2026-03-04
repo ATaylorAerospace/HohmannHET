@@ -13,7 +13,7 @@ namespace orbital_constants {
     constexpr double R_EARTH = 6378.137;
     constexpr double INV_3600 = 1.0 / 3600.0;
     constexpr double PI = 3.14159265358979323846;
-    constexpr double SQRT_MU = 631.348; // Pre-computed sqrt(MU)
+    constexpr double SQRT_MU = 631.34813; // Pre-computed sqrt(MU), accurate to 8 significant figures
 }
 
 class HohmannTransfer {
