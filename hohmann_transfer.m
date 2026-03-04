@@ -23,11 +23,6 @@ classdef HohmannTransferOptimized < handle
     properties (Access = private)
         delta_v_departure  % Delta-V for departure burn (km/s)
         delta_v_arrival    % Delta-V for arrival burn (km/s)
-        
-        % Cached trigonometric values for visualization
-        cos_theta
-        sin_theta
-        zeros_array
     end
     
     methods
@@ -53,9 +48,6 @@ classdef HohmannTransferOptimized < handle
             
             % Calculate all values in one pass
             obj.computeAllValues();
-            
-            % Precompute trigonometric values for visualization
-            obj.precomputeTrigValues();
         end
         
         function computeAllValues(obj)
@@ -75,14 +67,6 @@ classdef HohmannTransferOptimized < handle
             % Precompute transfer time and hours conversion
             obj.transfer_time  = pi * obj.a_transfer * sqrt(obj.a_transfer / obj.MU);
             obj.transfer_hours = obj.transfer_time * obj.INV_3600;
-        end
-        
-        function precomputeTrigValues(obj)
-            % Precompute trigonometric values for visualization
-            theta = linspace(0, 2*pi, obj.ORBIT_POINTS)';
-            obj.cos_theta = cos(theta);
-            obj.sin_theta = sin(theta);
-            obj.zeros_array = zeros(size(theta));
         end
         
         function printTransferDetails(obj)
@@ -118,10 +102,15 @@ classdef HohmannTransferOptimized < handle
                 'FaceAlpha', 0.1, 'EdgeColor', 'none', 'FaceColor', 'blue', ...
                 'DisplayName', 'Earth');
             
-            % Plot orbits using precomputed trigonometric values
-            plot3(ax, obj.r1 * obj.cos_theta, obj.r1 * obj.sin_theta, obj.zeros_array, ...
+            % Compute orbit arrays on demand (only when visualizing)
+            orbit_theta  = linspace(0, 2*pi, obj.ORBIT_POINTS)';
+            cos_orbit    = cos(orbit_theta);
+            sin_orbit    = sin(orbit_theta);
+            zeros_orbit  = zeros(size(orbit_theta));
+
+            plot3(ax, obj.r1 * cos_orbit, obj.r1 * sin_orbit, zeros_orbit, ...
                   'g-', 'LineWidth', 2, 'DisplayName', 'Initial Orbit');
-            plot3(ax, obj.r2 * obj.cos_theta, obj.r2 * obj.sin_theta, obj.zeros_array, ...
+            plot3(ax, obj.r2 * cos_orbit, obj.r2 * sin_orbit, zeros_orbit, ...
                   'r-', 'LineWidth', 2, 'DisplayName', 'Final Orbit');
             
             % Optimized transfer orbit (ellipse)
