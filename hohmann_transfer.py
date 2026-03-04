@@ -65,7 +65,7 @@ class HohmannTransferOptimized:
         self.delta_v_arrival = vc2 - vt2
         self.total_delta_v = self.delta_v_departure + self.delta_v_arrival
 
-        self.transfer_time = math.pi * math.sqrt(self.a_transfer**3 / MU)
+        self.transfer_time = math.pi * self.a_transfer * math.sqrt(self.a_transfer / MU)
         self.transfer_hours = self.transfer_time * INV_3600
 
     def _precompute_visualization(self) -> None:
