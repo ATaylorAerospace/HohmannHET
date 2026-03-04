@@ -148,23 +148,6 @@ Delta-V (Arrival Burn): {self.delta_v_arrival:.2f} km/s
 Total Delta-V: {self.total_delta_v:.2f} km/s
 Transfer Time: {self.transfer_hours:.2f} hours""")
 
-    # Property-style getters for better performance than methods
-    @property
-    def departure_delta_v(self) -> float:
-        return self.delta_v_departure
-    
-    @property
-    def arrival_delta_v(self) -> float:
-        return self.delta_v_arrival
-    
-    @property
-    def total_delta_v_property(self) -> float:
-        return self.total_delta_v
-    
-    @property
-    def transfer_time_hours(self) -> float:
-        return self.transfer_hours
-
 def get_valid_input(prompt: str) -> float:
     """Optimized input validation with minimal overhead"""
     while True:
