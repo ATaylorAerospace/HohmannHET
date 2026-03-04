@@ -133,7 +133,7 @@ classdef HohmannTransferOptimized < handle
             % Semi-major and semi-minor axes
             a = obj.a_transfer;
             c = abs(obj.r2 - obj.r1) * 0.5;  % Distance from center to focus
-            b = sqrt(a^2 - c^2);  % Semi-minor axis
+            b = sqrt(a*a - c*c);  % Semi-minor axis
             
             % Ellipse coordinates (centered, then translated)
             x_ellipse = a * cos(theta_transfer);
