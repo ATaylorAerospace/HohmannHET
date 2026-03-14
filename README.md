@@ -6,7 +6,7 @@
 
 ## 📋 Overview
 
-**HohmannHET** is a professional tri-language library for low-thrust orbital transfers combining Keplerian Hohmann mechanics, high-fidelity Hall Effect Thruster (HET) propulsion models, and mission optimization solvers.
+**HohmannHET** is a library for low-thrust orbital transfers combining Keplerian Hohmann mechanics, high-fidelity Hall Effect Thruster (HET) propulsion models, and mission optimization solvers.
 
 The library delivers identical numerical results across **Python**, **C++20**, and **MATLAB** to within a floating-point tolerance of `1e-6`, making it suitable for cross-environment verification, flight-software prototyping, and academic research.
 
@@ -242,10 +242,10 @@ Reference values (Vallado Table 6-1), verified across all three languages:
 ## 📋 Citations
 
 ```bibtex
-@misc{ATaylor_HohmannHET_2025,
+@misc{ATaylor_HohmannHET_2026,
   author = {A. Taylor},
-  title  = {HohmannHET: Tri-Language Low-Thrust Orbital Transfer Library},
-  year   = {2025},
+  title  = {HohmannHET: Low-Thrust Orbital Transfer Library},
+  year   = {2026},
   url    = {https://github.com/ATaylorAerospace/HohmannHET}
 }
 ```
