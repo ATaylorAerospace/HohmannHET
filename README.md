@@ -1,3 +1,5 @@
+![hohmanhet](docs/hetopt.png)
+
 ### 🚀 Hohmann Transfer with Hall Effect Thrusters (HohmannHET)
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
