@@ -56,9 +56,9 @@ struct HohmannTransfer {
     double dv_arrival;    ///< Second impulsive delta-V [km/s]
     double tof;           ///< Transfer time-of-flight [s]
 
-    /// Total delta-V (sum of both burns) [km/s]
-    [[nodiscard]] constexpr double total_dv() const noexcept {
-        return dv_departure + dv_arrival;
+    /// Total delta-V (absolute sum of both burns) [km/s]
+    [[nodiscard]] double total_dv() const noexcept {
+        return std::abs(dv_departure) + std::abs(dv_arrival);
     }
 
     /// Transfer time-of-flight in hours
