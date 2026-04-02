@@ -3,15 +3,16 @@
 ### 🚀 Hohmann Transfer with Hall Effect Thrusters (HohmannHET)
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![CI](https://github.com/ATaylorAerospace/HohmannHET/actions/workflows/ci.yml/badge.svg)](https://github.com/ATaylorAerospace/HohmannHET/actions/workflows/ci.yml)
 [![Stars](https://img.shields.io/github/stars/ATaylorAerospace/HohmannHET?style=social)](https://github.com/ATaylorAerospace/HohmannHET)
 [![Language](https://img.shields.io/badge/Languages-Python%20%7C%20C%2B%2B%20%7C%20MATLAB-brightgreen)](https://github.com/ATaylorAerospace/HohmannHET)
 [![Contact](https://img.shields.io/badge/Contact-A%20Taylor-brightgreen.svg?logo=mail.ru&logoColor=white)](https://ataylor.getform.com/5w8wz)
 
 ## 📋 Overview
 
-**HohmannHET** is a library for low-thrust orbital transfers combining Keplerian Hohmann mechanics, high-fidelity Hall Effect Thruster (HET) propulsion models, and mission optimization solvers.
+**HohmannHET** is a library for low-thrust orbital transfers combining Keplerian Hohmann mechanics, high fidelity Hall Effect Thruster (HET) propulsion models, and mission optimization solvers.
 
-The library delivers identical numerical results across **Python**, **C++20**, and **MATLAB** to within a floating-point tolerance of `1e-6`, making it suitable for cross-environment verification, flight-software prototyping, and academic research.
+The library delivers identical numerical results across **Python**, **C++20**, and **MATLAB** to within a floating point tolerance of `1e-6`, making it suitable for cross environment verification, flight software prototyping, and academic research.
 
 **Author:** A Taylor | **Reference:** Vallado / Curtis
 
@@ -33,11 +34,12 @@ The library delivers identical numerical results across **Python**, **C++20**, a
 - Every physics equation documented in LaTeX (Python docstrings / C++ Doxygen / MATLAB help blocks)
 - References: Vallado "Fundamentals of Astrodynamics and Applications," Curtis "Orbital Mechanics for Engineering Students," Goebel & Katz "Fundamentals of Electric Propulsion"
 
-### 🧪 **Comprehensive Testing**
-- **Python:** `pytest` suite with `astropy.units` quantity checks
+### 🧪 **Comprehensive Testing & CI**
+- **Python:** `pytest` suite with `astropy.units` quantity checks and PEP 561 inline type support (`py.typed`)
 - **MATLAB:** `matlab.unittest` class-based tests with `arguments` validation
 - **C++:** GoogleTest (gtest/gmock) with parameterized scenarios
 - All suites validate against LEO-to-GEO benchmark values (Vallado Table 6-1)
+- **CI:** GitHub Actions runs Python (3.10 / 3.11 / 3.12) and C++ test suites on every push and PR
 
 ---
 
@@ -45,6 +47,9 @@ The library delivers identical numerical results across **Python**, **C++20**, a
 
 ```
 HohmannHET/
+├── .github/
+│   └── workflows/
+│       └── ci.yml                  # GitHub Actions CI for Python + C++
 ├── python/
 │   ├── pyproject.toml              # Hatch build config, astropy dependency
 │   ├── src/
@@ -52,7 +57,8 @@ HohmannHET/
 │   │       ├── __init__.py
 │   │       ├── dynamics.py         # Hohmann transfer, circular velocity, TOF
 │   │       ├── propulsion.py       # HET operating point, Tsiolkovsky equation
-│   │       └── optimization.py     # Golden-section Isp optimizer
+│   │       ├── optimization.py     # Golden-section Isp optimizer
+│   │       └── py.typed            # PEP 561 marker for inline type support
 │   └── tests/
 │       ├── test_dynamics.py
 │       ├── test_propulsion.py
@@ -68,18 +74,23 @@ HohmannHET/
 │       ├── TestPropulsion.m
 │       └── TestOptimization.m
 │
-└── cpp/
-    ├── CMakeLists.txt              # C++20, header-only library + GTest suite
-    ├── include/
-    │   └── hohmann_het/
-    │       ├── dynamics.hpp        # Doxygen-annotated header-only implementation
-    │       ├── propulsion.hpp
-    │       └── optimization.hpp
-    └── tests/
-        ├── CMakeLists.txt
-        ├── test_dynamics.cpp
-        ├── test_propulsion.cpp
-        └── test_optimization.cpp
+├── cpp/
+│   ├── CMakeLists.txt              # C++20, header-only library + GTest suite
+│   ├── include/
+│   │   └── hohmann_het/
+│   │       ├── dynamics.hpp        # Doxygen-annotated header-only implementation
+│   │       ├── propulsion.hpp
+│   │       └── optimization.hpp
+│   └── tests/
+│       ├── CMakeLists.txt
+│       ├── test_dynamics.cpp
+│       ├── test_propulsion.cpp
+│       └── test_optimization.cpp
+│
+├── .gitignore                      # Python / C++ / MATLAB / IDE ignore rules
+├── CONTRIBUTING.md                 # Contribution guidelines and parity rules
+├── LICENSE                         # Apache 2.0
+└── README.md
 ```
 
 ---
@@ -224,7 +235,7 @@ using namespace hohmann_het;
 
 auto transfer = compute_hohmann(400.0, 35786.0);
 auto het      = compute_het_state(300.0, 1350.0, 0.50);
-auto opt      = optimize_isp(1000.0, transfer.total_dv() * 1000.0, 5000.0, 0.55);
+auto opt      = min_propellant_transfer(400.0, 35786.0, 1000.0, 5000.0, 0.55);
 ```
 
 ---
@@ -255,6 +266,13 @@ Reference values (Vallado Table 6-1), verified across all three languages:
 
 ---
 
+## 🤝 Contributing
+
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting a pull request. The most important rule: **every physics function must be implemented identically across all three languages** (Python, C++, MATLAB) with numerical agreement to `1e-6`.
+
+---
+
 ## 📬 Contact
 
 [![Contact A Taylor](https://img.shields.io/badge/Contact_A_Taylor-Get_In_Touch-brightgreen.svg?logo=mail.ru&logoColor=white)](https://ataylor.getform.com/5w8wz)
+
