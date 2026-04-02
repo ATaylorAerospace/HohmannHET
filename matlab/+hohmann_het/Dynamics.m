@@ -88,7 +88,7 @@ classdef Dynamics
             result.dv_departure = dv1;
             result.dv_arrival   = dv2;
             result.tof          = tof;
-            result.total_dv     = dv1 + dv2;
+            result.total_dv     = abs(dv1) + abs(dv2);
             result.tof_hours    = tof / 3600.0;
         end
 
