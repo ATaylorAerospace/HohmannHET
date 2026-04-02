@@ -148,4 +148,38 @@ inline double golden_section_minimize(
     return OptimizationResult{isp_opt, mp_opt, tb_opt, J_opt};
 }
 
+
+/**
+ * @brief Compute Hohmann delta-V then optimize Isp for minimum propellant.
+ *
+ * Convenience wrapper combining compute_hohmann() and optimize_isp().
+ * Matches the Python and MATLAB min_propellant_transfer() API for
+ * tri-language parity.
+ *
+ * @param h1                Initial orbit altitude [km].
+ * @param h2                Final orbit altitude [km].
+ * @param m_initial         Spacecraft wet mass [kg].
+ * @param discharge_power   Available HET power [W].
+ * @param anode_efficiency  Anode efficiency in (0, 1).
+ * @param isp_min           Lower Isp search bound [s]. Default 500.
+ * @param isp_max           Upper Isp search bound [s]. Default 5000.
+ * @return OptimizationResult
+ */
+[[nodiscard]] inline OptimizationResult min_propellant_transfer(
+    double h1,
+    double h2,
+    double m_initial,
+    double discharge_power,
+    double anode_efficiency,
+    double isp_min = 500.0,
+    double isp_max = 5000.0)
+{
+    const auto transfer = compute_hohmann(h1, h2);
+    // Convert total_dv from km/s to m/s for optimize_isp
+    const double dv_ms = transfer.total_dv() * 1000.0;
+    return optimize_isp(
+        m_initial, dv_ms, discharge_power, anode_efficiency,
+        isp_min, isp_max);
+}
+
 } // namespace hohmann_het
