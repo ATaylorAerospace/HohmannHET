@@ -31,3 +31,6 @@ packages = ["src/hohmann_het"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-v --tb=short"
+
+[tool.mypy]
+strict = true
