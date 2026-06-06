@@ -17,7 +17,6 @@
  */
 
 #include <cmath>
-#include <functional>
 #include <stdexcept>
 
 #include "dynamics.hpp"
@@ -50,29 +49,47 @@ struct OptimizationResult {
  * The interval is reduced at each step by the golden ratio:
  * @f[ \varphi = \frac{1 + \sqrt{5}}{2} \approx 1.618 @f]
  *
- * @param func  Scalar function to minimize.
- * @param a     Left  bound of search interval.
- * @param b     Right bound of search interval.
- * @param tol   Convergence tolerance on interval width.
- * @return      Approximate location of the minimum.
+ * The two interior probe points are cached between iterations so that only
+ * a single new @p func evaluation is required per step (one interior point
+ * and its value are always reused), roughly halving the number of objective
+ * evaluations compared with a naive two-evaluation loop. The same caching
+ * scheme is used in the Python and MATLAB ports to preserve cross-language
+ * parity.
+ *
+ * @p func is taken as a template parameter rather than a std::function so
+ * the supplied callable is inlined and no type-erasure or heap allocation
+ * occurs on the optimization hot path.
+ *
+ * @tparam F     Callable type with signature double(double).
+ * @param func   Scalar function to minimize.
+ * @param a      Left  bound of search interval.
+ * @param b      Right bound of search interval.
+ * @param tol    Convergence tolerance on interval width.
+ * @return       Approximate location of the minimum.
  */
-inline double golden_section_minimize(
-    std::function<double(double)> func,
-    double a,
-    double b,
-    double tol = 1e-9)
+template <typename F>
+double golden_section_minimize(F func, double a, double b, double tol = 1e-9)
 {
     const double gr = (std::sqrt(5.0) + 1.0) / 2.0;
     double c = b - (b - a) / gr;
     double d = a + (b - a) / gr;
+    double fc = func(c);
+    double fd = func(d);
 
     while (std::abs(b - a) > tol) {
-        if (func(c) < func(d))
+        if (fc < fd) {
             b = d;
-        else
+            d = c;
+            fd = fc;
+            c = b - (b - a) / gr;
+            fc = func(c);
+        } else {
             a = c;
-        c = b - (b - a) / gr;
-        d = a + (b - a) / gr;
+            c = d;
+            fc = fd;
+            d = a + (b - a) / gr;
+            fd = func(d);
+        }
     }
     return (a + b) / 2.0;
 }

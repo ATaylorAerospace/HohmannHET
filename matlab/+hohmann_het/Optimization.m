@@ -28,6 +28,13 @@ classdef Optimization
         %
         %   phi = (1 + sqrt(5)) / 2   (golden ratio)
         %
+        % The two interior probe points are cached between iterations so
+        % that only a single new func evaluation is required per step (one
+        % interior point and its value are always reused), roughly halving
+        % the number of objective evaluations compared with a naive
+        % two-evaluation loop. The same caching scheme is used in the
+        % Python and C++ ports to preserve cross-language parity.
+        %
         % Inputs:
         %   func - function handle @(x) scalar
         %   a    - left  bound of search interval
@@ -47,15 +54,23 @@ classdef Optimization
             gr = (sqrt(5.0) + 1.0) / 2.0;  % golden ratio
             c  = b - (b - a) / gr;
             d  = a + (b - a) / gr;
+            fc = func(c);
+            fd = func(d);
 
             while abs(b - a) > tol
-                if func(c) < func(d)
-                    b = d;
+                if fc < fd
+                    b  = d;
+                    d  = c;
+                    fd = fc;
+                    c  = b - (b - a) / gr;
+                    fc = func(c);
                 else
-                    a = c;
+                    a  = c;
+                    c  = d;
+                    fc = fd;
+                    d  = a + (b - a) / gr;
+                    fd = func(d);
                 end
-                c = b - (b - a) / gr;
-                d = a + (b - a) / gr;
             end
 
             x_min = (a + b) / 2.0;

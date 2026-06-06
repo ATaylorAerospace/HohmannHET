@@ -60,6 +60,13 @@ def golden_section_minimize(
     .. math::
         \varphi = \frac{1 + \sqrt{5}}{2} \approx 1.618
 
+    The two interior probe points are cached between iterations so that
+    only a single new ``func`` evaluation is required per step (one
+    interior point and its value are always reused), roughly halving the
+    number of objective evaluations compared with a naive two-evaluation
+    loop. The same caching scheme is used in the C++ and MATLAB ports to
+    preserve cross-language parity.
+
     Parameters
     ----------
     func : callable
@@ -79,14 +86,18 @@ def golden_section_minimize(
     gr = (math.sqrt(5.0) + 1.0) / 2.0  # golden ratio
     c = b - (b - a) / gr
     d = a + (b - a) / gr
+    fc = func(c)
+    fd = func(d)
 
     while abs(b - a) > tol:
-        if func(c) < func(d):
-            b = d
+        if fc < fd:
+            b, d, fd = d, c, fc
+            c = b - (b - a) / gr
+            fc = func(c)
         else:
-            a = c
-        c = b - (b - a) / gr
-        d = a + (b - a) / gr
+            a, c, fc = c, d, fd
+            d = a + (b - a) / gr
+            fd = func(d)
 
     return (a + b) / 2.0
 
@@ -129,7 +140,8 @@ def optimize_isp(
     m_initial : astropy.units.Quantity or float
         Spacecraft initial (wet) mass [kg].
     delta_v : astropy.units.Quantity or float
-        Required delta-V. If plain ``float``, assumed km/s.
+        Required delta-V. If plain ``float``, assumed m/s (matching the
+        MATLAB and C++ ``optimize_isp`` APIs for cross-language parity).
     discharge_power : astropy.units.Quantity or float
         Available thruster discharge power [W].
     anode_efficiency : float
@@ -149,7 +161,7 @@ def optimize_isp(
     if not isinstance(m_initial, u.Quantity):
         m_initial = float(m_initial) * u.kg
     if not isinstance(delta_v, u.Quantity):
-        delta_v = float(delta_v) * (u.km / u.s)
+        delta_v = float(delta_v) * (u.m / u.s)
     if not isinstance(discharge_power, u.Quantity):
         discharge_power = float(discharge_power) * u.W
     if not isinstance(isp_min, u.Quantity):
