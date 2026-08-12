@@ -1,3 +1,5 @@
+
+
 ![hohmanhet](docs/hetopt.png)
 
 ### 🚀 Hohmann Transfer with Hall Effect Thrusters (HohmannHET)
@@ -151,7 +153,7 @@ print(f"Isp       : {het.isp:.1f}")
 print(f"Thrust    : {het.thrust:.4f}")
 
 # Optimize Isp for 1000 kg spacecraft, 5 kW thruster
-result = optimize_isp(1000.0 * u.kg, transfer.total_dv, 5000.0 * u.W, 0.55)
+result = optimize_isp(1000.0 * u.kg, transfer.total_dv.to(u.m/u.s), 5000.0 * u.W, 0.55)
 print(f"Optimal Isp : {result.optimal_isp:.1f}")
 print(f"Propellant  : {result.propellant_mass:.2f}")
 ```
@@ -275,4 +277,3 @@ Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) before
 ## 📬 Contact
 
 [![Contact A Taylor](https://img.shields.io/badge/Contact_A_Taylor-Get_In_Touch-brightgreen.svg?logo=mail.ru&logoColor=white)](https://ataylor.getform.com/5w8wz)
-
