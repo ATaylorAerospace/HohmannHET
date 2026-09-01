@@ -205,3 +205,24 @@ TEST(BurnTimeTest, ZeroDvZeroBurnTime) {
 TEST(BurnTimeTest, InvalidThrustThrows) {
     EXPECT_THROW(burn_time(-1.0, 1e-4, 3000.0, 1000.0), std::invalid_argument);
 }
+
+
+// ---------------------------------------------------------------------------
+// Golden reference values (shared verbatim with Python and MATLAB suites)
+// ---------------------------------------------------------------------------
+// HET operating point: V_d=300 V, P_d=1350 W, eta_a=0.50.
+TEST(PropulsionGolden, ExhaustVelocity) {
+    const auto s = compute_het_state(300.0, 1350.0, 0.50);
+    EXPECT_NEAR(s.exhaust_velocity, 14848.078200420248, 1e-6);
+}
+
+TEST(PropulsionGolden, Isp) {
+    const auto s = compute_het_state(300.0, 1350.0, 0.50);
+    EXPECT_NEAR(s.isp, 1514.0826072532668, 1e-6);
+}
+
+TEST(PropulsionGolden, PropellantMass) {
+    // m0=1000 kg, dv=3852.6 m/s, Isp=1514.0826072532668 s
+    const double mp = propellant_mass(1000.0, 3852.6, 1514.0826072532668);
+    EXPECT_NEAR(mp, 228.53804563565538, 1e-6);
+}

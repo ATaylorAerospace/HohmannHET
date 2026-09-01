@@ -9,6 +9,25 @@ Every physics function must be implemented identically in Python, C++, and
 MATLAB. If you change a formula or add a feature in one language, you must
 update all three. Cross-language numerical agreement must hold to `1e-6`.
 
+The `TestGoldenReferenceValues` / `DynamicsGolden` / `PropulsionGolden` /
+`golden`-tagged tests pin hardcoded numeric literals that are identical in all
+three suites. These enforce the parity guarantee: if you change a formula,
+update the shared golden literals in Python, C++, and MATLAB together.
+
+### Units Convention
+
+All three implementations share one unit convention:
+
+- Altitudes, radii, semi-major axis: km
+- Orbit / transfer velocities returned by `dynamics`: km/s
+- delta-V arguments to `propulsion` and `optimization` functions
+  (`propellant_mass`, `burn_time`, `optimize_isp`): m/s
+- Specific impulse: s; thrust: N; mass: kg; mass flow: kg/s
+
+In Python an `astropy.units.Quantity` is auto-converted; a plain `float` is
+interpreted in the unit above. Do not introduce a function whose delta-V
+argument uses km/s.
+
 ## Development Setup
 
 ### Python

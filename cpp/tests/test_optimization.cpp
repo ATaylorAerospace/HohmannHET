@@ -121,6 +121,11 @@ TEST(OptimizeIspValidation, NegativeDvThrows) {
     EXPECT_THROW(optimize_isp(M0, -1.0, P, ETA), std::invalid_argument);
 }
 
+TEST(OptimizeIspValidation, ZeroDvThrows) {
+    // delta_v == 0 would make the burn-time normalisation 0/0 (NaN).
+    EXPECT_THROW(optimize_isp(M0, 0.0, P, ETA), std::invalid_argument);
+}
+
 TEST(OptimizeIspValidation, NegativePowerThrows) {
     EXPECT_THROW(optimize_isp(M0, DV, -100.0, ETA), std::invalid_argument);
 }

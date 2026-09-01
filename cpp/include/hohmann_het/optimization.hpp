@@ -117,7 +117,7 @@ double golden_section_minimize(F func, double a, double b, double tol = 1e-9)
  * @f$I_{sp} \in [I_{sp,\min},\ I_{sp,\max}]@f$.
  *
  * @param m_initial         Spacecraft wet mass [kg]. Must be positive.
- * @param delta_v           Required delta-V [m/s]. Non-negative.
+ * @param delta_v           Required delta-V [m/s]. Must be positive.
  * @param discharge_power   Available thruster power [W]. Must be positive.
  * @param anode_efficiency  HET anode efficiency @f$\eta_a \in (0,1)@f$.
  * @param isp_min           Lower bound of Isp search [s]. Default 500.
@@ -135,8 +135,8 @@ double golden_section_minimize(F func, double a, double b, double tol = 1e-9)
     double isp_max        = 5000.0,
     double lambda_weight  = 1e-4)
 {
-    if (m_initial <= 0.0 || delta_v < 0.0 || discharge_power <= 0.0)
-        throw std::invalid_argument("Mass, delta-V, and power must be non-negative/positive.");
+    if (m_initial <= 0.0 || delta_v <= 0.0 || discharge_power <= 0.0)
+        throw std::invalid_argument("Mass, delta-V, and power must be strictly positive.");
     if (anode_efficiency <= 0.0 || anode_efficiency >= 1.0)
         throw std::invalid_argument("Anode efficiency must be in (0, 1).");
     if (isp_min <= 0.0 || isp_max <= isp_min)

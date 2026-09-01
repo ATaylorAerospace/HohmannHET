@@ -101,6 +101,16 @@ class TestOptimizeIsp:
         with pytest.raises(ValueError):
             optimize_isp(-100.0, DV, P, ETA)
 
+    def test_invalid_zero_delta_v(self):
+        # delta_v == 0 would make the burn-time normalisation 0/0 (NaN);
+        # it must be rejected rather than silently returning garbage.
+        with pytest.raises(ValueError):
+            optimize_isp(M0, 0.0, P, ETA)
+
+    def test_invalid_negative_delta_v(self):
+        with pytest.raises(ValueError):
+            optimize_isp(M0, -1.0, P, ETA)
+
     def test_invalid_efficiency(self):
         with pytest.raises(ValueError):
             optimize_isp(M0, DV, P, 1.5)

@@ -152,7 +152,8 @@ def propellant_mass(
     m_initial : astropy.units.Quantity or float
         Initial (wet) spacecraft mass [kg]. If plain ``float``, assumed kg.
     delta_v : astropy.units.Quantity or float
-        Required delta-V. If plain ``float``, assumed km/s.
+        Required delta-V. If plain ``float``, assumed m/s (matching the
+        C++ and MATLAB APIs; all delta-V arguments in this library are m/s).
     isp : astropy.units.Quantity or float
         Specific impulse [s]. If plain ``float``, assumed s.
 
@@ -160,17 +161,25 @@ def propellant_mass(
     -------
     u.Quantity
         Propellant mass [kg].
+
+    Raises
+    ------
+    ValueError
+        If ``m_initial`` or ``isp`` are non-positive, or ``delta_v`` is negative.
     """
     if not isinstance(m_initial, u.Quantity):
         m_initial = float(m_initial) * u.kg
     if not isinstance(delta_v, u.Quantity):
-        delta_v = float(delta_v) * (u.km / u.s)
+        delta_v = float(delta_v) * (u.m / u.s)
     if not isinstance(isp, u.Quantity):
         isp = float(isp) * u.s
 
     m0   = m_initial.to(u.kg).value
-    dv   = delta_v.to(u.m / u.s).value   # convert km/s -> m/s
+    dv   = delta_v.to(u.m / u.s).value
     isp_s = isp.to(u.s).value
+
+    if m0 <= 0.0 or isp_s <= 0.0 or dv < 0.0:
+        raise ValueError("m_initial and isp must be positive; delta_v must be non-negative.")
 
     ve = isp_s * G0.value                 # m/s
     mp = m0 * (1.0 - math.exp(-dv / ve))
@@ -200,7 +209,8 @@ def burn_time(
     mass_flow : astropy.units.Quantity or float
         Mass flow rate [kg/s]. If plain ``float``, assumed kg/s.
     delta_v : astropy.units.Quantity or float
-        Required delta-V. If plain ``float``, assumed km/s.
+        Required delta-V. If plain ``float``, assumed m/s (matching the
+        C++ and MATLAB APIs; all delta-V arguments in this library are m/s).
     m_initial : astropy.units.Quantity or float
         Initial spacecraft mass [kg]. If plain ``float``, assumed kg.
 
@@ -214,7 +224,7 @@ def burn_time(
     if not isinstance(mass_flow, u.Quantity):
         mass_flow = float(mass_flow) * (u.kg / u.s)
     if not isinstance(delta_v, u.Quantity):
-        delta_v = float(delta_v) * (u.km / u.s)
+        delta_v = float(delta_v) * (u.m / u.s)
     if not isinstance(m_initial, u.Quantity):
         m_initial = float(m_initial) * u.kg
 

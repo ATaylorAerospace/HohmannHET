@@ -129,14 +129,13 @@ class TestComputeHETStateErrors:
 
 
 class TestPropellantMass:
-    # Reference: m0=1000 kg, dv=3.8526 km/s (LEO-GEO), Isp=ISP_REF
-    M0 = 1000.0   # kg
-    DV = 3.8526   # km/s
+    # Reference: m0=1000 kg, dv=3852.6 m/s (LEO-GEO), Isp=ISP_REF
+    M0 = 1000.0     # kg
+    DV = 3852.6     # m/s
 
     def _mp_ref(self, isp):
         ve = isp * G0.value
-        dv_ms = self.DV * 1000.0
-        return self.M0 * (1.0 - math.exp(-dv_ms / ve))
+        return self.M0 * (1.0 - math.exp(-self.DV / ve))
 
     def test_units(self):
         mp = propellant_mass(self.M0, self.DV, ISP_REF)
@@ -146,6 +145,12 @@ class TestPropellantMass:
         """Propellant mass matches Tsiolkovsky formula to 1e-6 kg."""
         mp = propellant_mass(self.M0, self.DV, ISP_REF)
         assert abs(mp.value - self._mp_ref(ISP_REF)) < TOL
+
+    def test_quantity_km_s_matches_bare_m_s(self):
+        """A km/s Quantity auto-converts and matches the bare-float m/s call."""
+        mp_bare = propellant_mass(self.M0, self.DV, ISP_REF)
+        mp_qty = propellant_mass(self.M0, 3.8526 * (u.km / u.s), ISP_REF)
+        assert abs(mp_bare.value - mp_qty.value) < TOL
 
     def test_higher_isp_lower_prop_mass(self):
         mp1 = propellant_mass(self.M0, self.DV, 1500.0)
@@ -163,6 +168,44 @@ class TestPropellantMass:
     def test_less_than_initial_mass(self):
         mp = propellant_mass(self.M0, self.DV, ISP_REF)
         assert mp.value < self.M0
+
+    # Input validation (parity with C++ and MATLAB)
+    def test_negative_mass_raises(self):
+        with pytest.raises(ValueError):
+            propellant_mass(-100.0, self.DV, ISP_REF)
+
+    def test_zero_isp_raises(self):
+        with pytest.raises(ValueError):
+            propellant_mass(self.M0, self.DV, 0.0)
+
+    def test_negative_dv_raises(self):
+        with pytest.raises(ValueError):
+            propellant_mass(self.M0, -1.0, ISP_REF)
+
+
+class TestGoldenReferenceValues:
+    """Hardcoded golden values shared verbatim across the Python, C++, and
+    MATLAB suites. These literals anchor the 1e-6 cross-language parity
+    guarantee: a wrong-but-self-consistent formula or a unit regression in
+    any single language would fail here.
+    """
+
+    # HET operating point: V_d=300 V, P_d=1350 W, eta_a=0.50
+    GOLDEN_VE = 14848.078200420248    # m/s
+    GOLDEN_ISP = 1514.0826072532668   # s
+
+    def test_golden_exhaust_velocity(self):
+        s = compute_het_state(300.0, 1350.0, 0.50)
+        assert abs(s.exhaust_velocity.value - self.GOLDEN_VE) < 1e-6
+
+    def test_golden_isp(self):
+        s = compute_het_state(300.0, 1350.0, 0.50)
+        assert abs(s.isp.value - self.GOLDEN_ISP) < 1e-6
+
+    def test_golden_propellant_mass(self):
+        # m0=1000 kg, dv=3852.6 m/s, Isp=GOLDEN_ISP -> known propellant mass
+        mp = propellant_mass(1000.0, 3852.6, self.GOLDEN_ISP)
+        assert abs(mp.value - 228.53804563565538) < 1e-6
 
 
 class TestBurnTime:

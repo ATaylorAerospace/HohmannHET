@@ -45,20 +45,11 @@ jobs:
       - uses: actions/checkout@v4
 
       # Install a prebuilt GoogleTest so the CMake find_package() path is hit
-      # and the suite does not re-download or recompile GoogleTest each run.
+      # and the suite does not download or recompile GoogleTest each run.
       - name: Install GoogleTest
         run: |
           sudo apt-get update
           sudo apt-get install -y libgtest-dev libgmock-dev
-
-      # Cache the CMake build tree (object files, fetched deps) across runs.
-      - name: Cache CMake build
-        uses: actions/cache@v4
-        with:
-          path: cpp/build
-          key: cmake-${{ runner.os }}-${{ hashFiles('cpp/**/CMakeLists.txt', 'cpp/**/*.cpp', 'cpp/**/*.hpp') }}
-          restore-keys: |
-            cmake-${{ runner.os }}-
 
       - name: Configure CMake
         run: |

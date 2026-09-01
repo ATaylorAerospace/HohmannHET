@@ -240,3 +240,37 @@ class TestOrbitalPeriod:
         T = orbital_period(a)
         expected = 2.0 * math.pi * a * math.sqrt(a / MU_REF)
         assert abs(T.value - expected) < TOL
+
+
+# ---------------------------------------------------------------------------
+# Golden reference values (shared verbatim with C++ and MATLAB suites)
+# ---------------------------------------------------------------------------
+class TestGoldenReferenceValues:
+    """Hardcoded golden values that anchor the 1e-6 cross-language parity
+    guarantee. The identical literals appear in the C++ (test_dynamics.cpp)
+    and MATLAB (TestDynamics.m) suites. Unlike the formula-derived checks
+    above, these catch a wrong-but-self-consistent formula or a unit
+    regression in any single language.
+
+    Values are the LEO (400 km) to GEO (35786 km) two-impulse transfer.
+    """
+
+    def test_golden_dv_departure(self):
+        r = compute_hohmann(400.0, 35786.0)
+        assert abs(r.dv_departure.value - 2.3974725168152418) < 1e-6
+
+    def test_golden_dv_arrival(self):
+        r = compute_hohmann(400.0, 35786.0)
+        assert abs(r.dv_arrival.value - 1.4564866995935786) < 1e-6
+
+    def test_golden_total_dv(self):
+        r = compute_hohmann(400.0, 35786.0)
+        assert abs(r.total_dv.value - 3.8539592164088203) < 1e-6
+
+    def test_golden_tof_seconds(self):
+        r = compute_hohmann(400.0, 35786.0)
+        assert abs(r.tof.value - 19048.562509797113) < 1e-6
+
+    def test_golden_a_transfer(self):
+        r = compute_hohmann(400.0, 35786.0)
+        assert abs(r.a_transfer.value - 24471.137) < 1e-6

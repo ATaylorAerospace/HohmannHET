@@ -133,13 +133,12 @@ classdef TestPropulsion < matlab.unittest.TestCase
         function testPropellantMassParity(tc)
         % Propellant mass matches Tsiolkovsky formula to 1e-6 kg.
             m0  = 1000.0;
-            dv  = 3.8526;  % km/s
+            dv  = 3852.6;  % m/s
             isp = tc.ref_isp();
             mp  = hohmann_het.Propulsion.propellant_mass(m0, dv, isp);
 
             ve       = isp * tc.G0;
-            dv_ms    = dv * 1000.0;
-            expected = m0 * (1.0 - exp(-dv_ms / ve));
+            expected = m0 * (1.0 - exp(-dv / ve));
             tc.verifyEqual(mp, expected, 'AbsTol', tc.TOL);
         end
 
@@ -149,13 +148,13 @@ classdef TestPropulsion < matlab.unittest.TestCase
         end
 
         function testHigherIspLowerPropMass(tc)
-            mp1 = hohmann_het.Propulsion.propellant_mass(1000.0, 3.0, 1500.0);
-            mp2 = hohmann_het.Propulsion.propellant_mass(1000.0, 3.0, 3000.0);
+            mp1 = hohmann_het.Propulsion.propellant_mass(1000.0, 3000.0, 1500.0);
+            mp2 = hohmann_het.Propulsion.propellant_mass(1000.0, 3000.0, 3000.0);
             tc.verifyLessThan(mp2, mp1);
         end
 
         function testPropMassLessThanInitial(tc)
-            mp = hohmann_het.Propulsion.propellant_mass(1000.0, 3.8526, tc.ref_isp());
+            mp = hohmann_het.Propulsion.propellant_mass(1000.0, 3852.6, tc.ref_isp());
             tc.verifyLessThan(mp, 1000.0);
         end
 
@@ -168,15 +167,38 @@ classdef TestPropulsion < matlab.unittest.TestCase
 
         function testBurnTimePositive(tc)
             s  = hohmann_het.Propulsion.compute_het_state(tc.V_D, tc.P_D, tc.ETA);
-            tb = hohmann_het.Propulsion.burn_time(s.thrust, s.mass_flow, 3.8526, 1000.0);
+            tb = hohmann_het.Propulsion.burn_time(s.thrust, s.mass_flow, 3852.6, 1000.0);
             tc.verifyGreaterThan(tb, 0.0);
         end
 
         function testLargerDvLongerBurn(tc)
             s   = hohmann_het.Propulsion.compute_het_state(tc.V_D, tc.P_D, tc.ETA);
-            tb1 = hohmann_het.Propulsion.burn_time(s.thrust, s.mass_flow, 1.0, 1000.0);
-            tb2 = hohmann_het.Propulsion.burn_time(s.thrust, s.mass_flow, 3.0, 1000.0);
+            tb1 = hohmann_het.Propulsion.burn_time(s.thrust, s.mass_flow, 1000.0, 1000.0);
+            tb2 = hohmann_het.Propulsion.burn_time(s.thrust, s.mass_flow, 3000.0, 1000.0);
             tc.verifyGreaterThan(tb2, tb1);
+        end
+
+    end
+
+    % -----------------------------------------------------------------------
+    % Golden reference values (shared verbatim with Python and C++ suites)
+    % -----------------------------------------------------------------------
+    methods (Test, TestTags = {'propulsion','golden'})
+
+        function testGoldenExhaustVelocity(tc)
+            s = hohmann_het.Propulsion.compute_het_state(300.0, 1350.0, 0.50);
+            tc.verifyEqual(s.exhaust_velocity, 14848.078200420248, 'AbsTol', 1e-6);
+        end
+
+        function testGoldenIsp(tc)
+            s = hohmann_het.Propulsion.compute_het_state(300.0, 1350.0, 0.50);
+            tc.verifyEqual(s.isp, 1514.0826072532668, 'AbsTol', 1e-6);
+        end
+
+        function testGoldenPropellantMass(tc)
+            % m0=1000 kg, dv=3852.6 m/s, Isp=1514.0826072532668 s
+            mp = hohmann_het.Propulsion.propellant_mass(1000.0, 3852.6, 1514.0826072532668);
+            tc.verifyEqual(mp, 228.53804563565538, 'AbsTol', 1e-6);
         end
 
     end

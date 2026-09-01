@@ -93,6 +93,15 @@ classdef TestOptimization < matlab.unittest.TestCase
                 'hohmann_het:Optimization:badBounds');
         end
 
+        function testZeroDeltaVThrows(tc)
+        % delta_v == 0 would make the burn-time normalisation 0/0 (NaN);
+        % it must be rejected by the mustBePositive validator.
+            tc.verifyError( ...
+                @() hohmann_het.Optimization.optimize_isp( ...
+                    tc.M0, 0.0, tc.P, tc.ETA), ...
+                'MATLAB:validators:mustBePositive');
+        end
+
     end
 
     % -----------------------------------------------------------------------
