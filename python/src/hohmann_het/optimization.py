@@ -177,8 +177,8 @@ def optimize_isp(
     eta_a  = anode_efficiency
     g0     = G0.value
 
-    if m0 <= 0.0 or dv_ms < 0.0 or P <= 0.0:
-        raise ValueError("Mass, delta-V, and power must be non-negative/positive.")
+    if m0 <= 0.0 or dv_ms <= 0.0 or P <= 0.0:
+        raise ValueError("Mass, delta-V, and power must be strictly positive.")
     if not (0.0 < eta_a < 1.0):
         raise ValueError("Anode efficiency must be in (0, 1).")
     if isp_lo <= 0.0 or isp_hi <= isp_lo:

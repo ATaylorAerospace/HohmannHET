@@ -263,3 +263,38 @@ INSTANTIATE_TEST_SUITE_P(
         TransferScenario{1000.0,  2000.0,  0.0, 2.0}
     )
 );
+
+
+// ---------------------------------------------------------------------------
+// Golden reference values (shared verbatim with Python and MATLAB suites)
+// ---------------------------------------------------------------------------
+// Hardcoded golden values that anchor the 1e-6 cross-language parity
+// guarantee. The identical literals appear in the Python (test_dynamics.py)
+// and MATLAB (TestDynamics.m) suites. Unlike the formula-derived checks,
+// these catch a wrong-but-self-consistent formula or a unit regression in
+// any single language. Values are the LEO (400 km) to GEO (35786 km)
+// two-impulse transfer.
+TEST(DynamicsGolden, DvDeparture) {
+    const auto t = compute_hohmann(400.0, 35786.0);
+    EXPECT_NEAR(t.dv_departure, 2.3974725168152418, 1e-6);
+}
+
+TEST(DynamicsGolden, DvArrival) {
+    const auto t = compute_hohmann(400.0, 35786.0);
+    EXPECT_NEAR(t.dv_arrival, 1.4564866995935786, 1e-6);
+}
+
+TEST(DynamicsGolden, TotalDv) {
+    const auto t = compute_hohmann(400.0, 35786.0);
+    EXPECT_NEAR(t.total_dv(), 3.8539592164088203, 1e-6);
+}
+
+TEST(DynamicsGolden, TofSeconds) {
+    const auto t = compute_hohmann(400.0, 35786.0);
+    EXPECT_NEAR(t.tof, 19048.562509797113, 1e-6);
+}
+
+TEST(DynamicsGolden, ATransfer) {
+    const auto t = compute_hohmann(400.0, 35786.0);
+    EXPECT_NEAR(t.a_transfer, 24471.137, 1e-6);
+}

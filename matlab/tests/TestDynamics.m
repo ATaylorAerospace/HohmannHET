@@ -210,6 +210,42 @@ classdef TestDynamics < matlab.unittest.TestCase
     end
 
     % -----------------------------------------------------------------------
+    % Golden reference values (shared verbatim with Python and C++ suites)
+    % -----------------------------------------------------------------------
+    % Hardcoded golden values that anchor the 1e-6 cross-language parity
+    % guarantee. The identical literals appear in the Python (test_dynamics.py)
+    % and C++ (test_dynamics.cpp) suites. Values are the LEO (400 km) to
+    % GEO (35786 km) two-impulse transfer.
+    methods (Test, TestTags = {'dynamics','golden'})
+
+        function testGoldenDvDeparture(tc)
+            r = hohmann_het.Dynamics.compute_hohmann(400.0, 35786.0);
+            tc.verifyEqual(r.dv_departure, 2.3974725168152418, 'AbsTol', 1e-6);
+        end
+
+        function testGoldenDvArrival(tc)
+            r = hohmann_het.Dynamics.compute_hohmann(400.0, 35786.0);
+            tc.verifyEqual(r.dv_arrival, 1.4564866995935786, 'AbsTol', 1e-6);
+        end
+
+        function testGoldenTotalDv(tc)
+            r = hohmann_het.Dynamics.compute_hohmann(400.0, 35786.0);
+            tc.verifyEqual(r.total_dv, 3.8539592164088203, 'AbsTol', 1e-6);
+        end
+
+        function testGoldenTofSeconds(tc)
+            r = hohmann_het.Dynamics.compute_hohmann(400.0, 35786.0);
+            tc.verifyEqual(r.tof, 19048.562509797113, 'AbsTol', 1e-6);
+        end
+
+        function testGoldenATransfer(tc)
+            r = hohmann_het.Dynamics.compute_hohmann(400.0, 35786.0);
+            tc.verifyEqual(r.a_transfer, 24471.137, 'AbsTol', 1e-6);
+        end
+
+    end
+
+    % -----------------------------------------------------------------------
     % Private reference implementation
     % -----------------------------------------------------------------------
     methods (Static, Access = private)

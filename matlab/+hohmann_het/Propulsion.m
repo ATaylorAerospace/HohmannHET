@@ -74,55 +74,59 @@ classdef Propulsion
             state.discharge_power  = discharge_power;
         end
 
-        function mp = propellant_mass(m_initial, delta_v_km_s, isp)
+        function mp = propellant_mass(m_initial, delta_v_m_s, isp)
         % PROPELLANT_MASS  Tsiolkovsky rocket equation.
         %
         %   m_p = m_0 * (1 - exp(-Delta_v / (g_0 * I_sp)))
         %
         % Inputs:
-        %   m_initial    - initial spacecraft mass [kg],  positive scalar
-        %   delta_v_km_s - required delta-V [km/s],       non-negative scalar
-        %   isp          - specific impulse [s],           positive scalar
+        %   m_initial   - initial spacecraft mass [kg],  positive scalar
+        %   delta_v_m_s - required delta-V [m/s],        non-negative scalar
+        %   isp         - specific impulse [s],           positive scalar
+        %
+        % All delta-V arguments in this library are m/s, matching the
+        % Python and C++ APIs.
         %
         % Output:
         %   mp - propellant mass [kg]
 
             arguments
-                m_initial    (1,1) double {mustBePositive,    mustBeFinite}
-                delta_v_km_s (1,1) double {mustBeNonnegative, mustBeFinite}
-                isp          (1,1) double {mustBePositive,    mustBeFinite}
+                m_initial   (1,1) double {mustBePositive,    mustBeFinite}
+                delta_v_m_s (1,1) double {mustBeNonnegative, mustBeFinite}
+                isp         (1,1) double {mustBePositive,    mustBeFinite}
             end
 
             G0 = hohmann_het.Propulsion.G0;
             ve = isp * G0;                      % m/s
-            dv = delta_v_km_s * 1000.0;         % km/s -> m/s
-            mp = m_initial * (1.0 - exp(-dv / ve));
+            mp = m_initial * (1.0 - exp(-delta_v_m_s / ve));
         end
 
-        function tb = burn_time(thrust, mass_flow, delta_v_km_s, m_initial)
+        function tb = burn_time(thrust, mass_flow, delta_v_m_s, m_initial)
         % BURN_TIME  Constant-thrust burn time for a given delta-V.
         %
         %   T_b = (m_0 / m_dot) * (1 - exp(-Delta_v / v_e))
         %
         % Inputs:
-        %   thrust       - thruster force [N],      positive scalar
-        %   mass_flow    - mass flow rate [kg/s],   positive scalar
-        %   delta_v_km_s - required delta-V [km/s], non-negative scalar
-        %   m_initial    - initial mass [kg],        positive scalar
+        %   thrust      - thruster force [N],      positive scalar
+        %   mass_flow   - mass flow rate [kg/s],   positive scalar
+        %   delta_v_m_s - required delta-V [m/s],  non-negative scalar
+        %   m_initial   - initial mass [kg],        positive scalar
+        %
+        % All delta-V arguments in this library are m/s, matching the
+        % Python and C++ APIs.
         %
         % Output:
         %   tb - burn time [s]
 
             arguments
-                thrust       (1,1) double {mustBePositive,    mustBeFinite}
-                mass_flow    (1,1) double {mustBePositive,    mustBeFinite}
-                delta_v_km_s (1,1) double {mustBeNonnegative, mustBeFinite}
-                m_initial    (1,1) double {mustBePositive,    mustBeFinite}
+                thrust      (1,1) double {mustBePositive,    mustBeFinite}
+                mass_flow   (1,1) double {mustBePositive,    mustBeFinite}
+                delta_v_m_s (1,1) double {mustBeNonnegative, mustBeFinite}
+                m_initial   (1,1) double {mustBePositive,    mustBeFinite}
             end
 
             ve = thrust / mass_flow;                % m/s
-            dv = delta_v_km_s * 1000.0;             % km/s -> m/s
-            tb = (m_initial / mass_flow) * (1.0 - exp(-dv / ve));
+            tb = (m_initial / mass_flow) * (1.0 - exp(-delta_v_m_s / ve));
         end
 
     end % methods (Static)

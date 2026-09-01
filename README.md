@@ -106,6 +106,20 @@ HohmannHET/
 | Xenon Atom Mass | 2.180174e-25 | kg |
 | Cross-language Precision | 1e-6 | - |
 
+### **Units Convention**
+The three implementations share one unit convention so identical calls give identical results:
+
+| Quantity | Unit |
+|----------|------|
+| Altitudes, radii, semi-major axis | km |
+| Orbit / transfer velocities (delta-V from `dynamics`) | km/s |
+| delta-V arguments to `propulsion` and `optimization` (`propellant_mass`, `burn_time`, `optimize_isp`) | m/s |
+| Specific impulse | s |
+| Thrust | N |
+| Mass, mass flow | kg, kg/s |
+
+In Python, any `astropy.units.Quantity` is accepted and auto-converted; a plain `float` is interpreted in the unit above.
+
 ### **Supported Transfer Scenarios**
 - ✅ Low Earth Orbit (LEO) to Geostationary Orbit (GEO)
 - ✅ Reverse transfers (GEO to LEO)
@@ -191,7 +205,7 @@ table(results)
 
 ### C++ (CMake)
 
-**Requirements:** CMake >= 3.20, C++20-capable compiler, internet access (GoogleTest fetched automatically).
+**Requirements:** CMake >= 3.20 and a C++20-capable compiler. The build uses a system GoogleTest when one is installed (`find_package(GTest)`, e.g. `libgtest-dev`/`libgmock-dev` on Debian/Ubuntu) and otherwise fetches it automatically via `FetchContent` (which needs internet access).
 
 **Build:**
 
@@ -248,7 +262,7 @@ Reference values (Vallado Table 6-1), verified across all three languages:
 |----------|-------|------|
 | Departure burn (dv1) | ~2.40 | km/s |
 | Arrival burn (dv2) | ~1.46 | km/s |
-| Total delta-V | ~3.86 | km/s |
+| Total delta-V | ~3.85 | km/s |
 | Transfer time | ~5.29 | hours |
 
 ---

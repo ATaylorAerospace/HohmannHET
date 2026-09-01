@@ -112,7 +112,7 @@ classdef Optimization
 
             arguments
                 m_initial        (1,1) double {mustBePositive,    mustBeFinite}
-                delta_v_m_s      (1,1) double {mustBeNonnegative, mustBeFinite}
+                delta_v_m_s      (1,1) double {mustBePositive, mustBeFinite}
                 discharge_power  (1,1) double {mustBePositive,    mustBeFinite}
                 anode_efficiency (1,1) double {mustBeInRange(anode_efficiency, 0, 1, "exclusive", "exclusive")}
                 isp_min          (1,1) double {mustBePositive,    mustBeFinite} = 500.0

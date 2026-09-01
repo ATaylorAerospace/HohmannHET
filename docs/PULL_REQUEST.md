@@ -1,34 +1,53 @@
-# 🚀 Optimizer efficiency + CI reliability
+# 🔍 Repository review: unit consistency, validation, and real parity tests
 
-Performance improvements to the optimization solver plus the CI fixes that get
-all jobs green, applied identically across Python, MATLAB, and C++ to preserve
-the `1e-6` cross-language parity guarantee.
+A correctness and consistency pass across the tri-language suite. Every change
+is mirrored in Python, C++, and MATLAB and all suites stay green.
 
-## ⚡ Solver efficiency
+## 🐛 Correctness and consistency fixes
 
-- **Golden-section caching** (`optimization.py` / `optimization.hpp` / `Optimization.m`): the two interior probe points and their objective values are cached between iterations, so each step makes **one** new objective evaluation instead of two: roughly **2x fewer** `exp()`-bearing evaluations. Interval-narrowing decisions are unchanged, so results are numerically identical.
-- **C++ template solver**: replaced `std::function<double(double)>` with a template type parameter so the callable inlines (no type-erasure / heap allocation on the hot path); dropped the `<functional>` include. Compiles clean under `-Wall -Wextra -Wpedantic`.
+- **Unified delta-V units to m/s (was inconsistent).** `propellant_mass` and
+  `burn_time` took delta-V in **km/s** in Python and MATLAB but **m/s** in C++,
+  so identical calls gave different answers across languages and Python was even
+  internally inconsistent (its `optimize_isp` already used m/s). All delta-V
+  arguments are now **m/s** everywhere. astropy `Quantity` inputs still
+  auto-convert in Python.
+- **Added missing validation to Python `propellant_mass`.** It silently accepted
+  negative mass / zero Isp / negative delta-V while C++ and MATLAB rejected them.
+  It now raises `ValueError`, matching the other two.
+- **Guarded `optimize_isp` against zero delta-V (all three).** `delta_v == 0`
+  made the burn-time normalisation `0/0` (NaN) and the golden-section search ran
+  on NaN. `delta_v` must now be strictly positive; rejected with a clear error.
 
-## 🔧 Parity fix
+## 🧪 Real cross-language parity tests
 
-- Python `optimize_isp` now treats a bare-float `delta_v` as **m/s**, matching the MATLAB and C++ APIs (previously km/s in Python only). Fixes a latent unit mismatch and aligns all three signatures.
+- **Hardcoded golden-value tests** added to all three suites
+  (`TestGoldenReferenceValues` / `DynamicsGolden` / `PropulsionGolden` /
+  `golden`-tagged). The prior `*_parity` tests recomputed the expected value with
+  a copy of the same formula, so they were tautological and could not catch a
+  wrong-but-consistent formula or a unit regression. The new tests pin identical
+  numeric literals (LEO-to-GEO transfer and the SPT-100 HET point), verified to
+  agree across Python and C++ to ~1e-13, well inside the 1e-6 guarantee.
+- Added validation tests: Python `propellant_mass` negative-mass / zero-Isp /
+  negative-delta-V, and `optimize_isp` zero / negative delta-V in all three.
 
-## 🧪 CI reliability
+## 🧹 Cleanup and docs
 
-- Added **`python/README.md`** so the Hatchling editable install resolves its `readme` field (the build previously failed with `Readme file does not exist`, which cascaded and cancelled the 3.10/3.12 matrix).
-- **pip cache** on the Python jobs; **prebuilt GoogleTest** via `libgtest-dev`/`libgmock-dev` with a `find_package(GTest)` fallback to `FetchContent`, so GoogleTest is no longer downloaded/recompiled each run.
-- Removed the fragile `cpp/build` cache (a known CMake stale-cache footgun) now that GoogleTest is prebuilt.
+- Removed the unused `scipy` dependency from `pyproject.toml` (never imported;
+  the solver is pure-Python by design).
+- README: corrected the benchmark total delta-V (3.86 -> 3.85), clarified the C++
+  GoogleTest requirement (system `find_package` first, `FetchContent` fallback),
+  and added an explicit units-convention table.
+- CONTRIBUTING: documented the units convention and the shared golden-value rule.
 
-## ✅ Verification (exact CI steps)
+## ✅ Verification
 
-- **Python:** `pip install -e ".[dev]"` succeeds; `pytest tests/` -> **86 passed**.
-- **C++:** apt GoogleTest -> `find_package` -> configure/build -> `ctest` -> **3/3 suites pass**.
-- **Cross-language parity:** Python vs C++ optimizer agree to `|isp| = 4e-10`, `|mp| = 2e-7` (well under `1e-6`).
+- **Python:** `pip install -e ".[dev]"` then `pytest tests/` -> **100 passed**
+  (was 86; +14 new tests).
+- **C++:** apt GoogleTest -> `find_package` -> build -> `ctest` -> **3/3 suites pass**
+  (golden anchors + zero-delta-V guard included).
+- **Parity:** Python and C++ golden values match to ~1e-13.
 
 ## 📋 Contribution rules honored
 
-Tri-language parity maintained; no `Claude`/`AI`/`LLM`/`anthropic` mentions; no em dashes in README; `Author: A Taylor` headers intact; commits authored by A Taylor.
-
-## Notes
-
-- The **Node.js 20 lines** in the run log are deprecation **warnings** (June 2026 runtime change), not failures: `checkout@v4`/`setup-python@v5` are current.
+Tri-language parity maintained; no `Claude`/`AI`/`LLM`/`anthropic` mentions; no em
+dashes in README; `Author: A Taylor` headers intact; commits authored by A Taylor.
