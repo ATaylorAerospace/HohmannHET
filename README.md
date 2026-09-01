@@ -24,6 +24,8 @@ The library delivers identical numerical results across **Python**, **C++20**, a
 - Identical `dynamics`, `propulsion`, and `optimization` modules in Python, C++, and MATLAB
 - Cross-language delta-V and TOF agreement to `1e-6` (km/s / s)
 - Shared physical constants: `mu = 398600.4418 km^3/s^2`, `R_E = 6378.137 km`
+- One shared units convention: all delta-V arguments to `propulsion` and `optimization` are m/s in every language
+- Parity enforced by golden reference tests: identical hardcoded numeric literals pinned verbatim in all three test suites
 
 ### 🔧 **Three Physics Modules**
 - **dynamics**: Keplerian Hohmann logic, impulsive maneuvers, circular velocity, orbital period
@@ -35,10 +37,12 @@ The library delivers identical numerical results across **Python**, **C++20**, a
 - References: Vallado "Fundamentals of Astrodynamics and Applications," Curtis "Orbital Mechanics for Engineering Students," Goebel & Katz "Fundamentals of Electric Propulsion"
 
 ### 🧪 **Comprehensive Testing & CI**
-- **Python:** `pytest` suite with `astropy.units` quantity checks and PEP 561 inline type support (`py.typed`)
+- **Python:** `pytest` suite (100 tests) with `astropy.units` quantity checks and PEP 561 inline type support (`py.typed`)
 - **MATLAB:** `matlab.unittest` class-based tests with `arguments` validation
 - **C++:** GoogleTest (gtest/gmock) with parameterized scenarios
 - All suites validate against LEO-to-GEO benchmark values (Vallado Table 6-1)
+- **Golden reference tests:** the same hardcoded literals appear in the Python, C++, and MATLAB suites, so a unit regression or formula drift in any single language fails its tests
+- **Consistent input validation:** invalid mass, Isp, efficiency, and delta-V inputs are rejected identically in every language (including zero delta-V in `optimize_isp`)
 - **CI:** GitHub Actions runs Python (3.10 / 3.11 / 3.12) and C++ test suites on every push and PR
 
 ---
@@ -50,8 +54,12 @@ HohmannHET/
 ├── .github/
 │   └── workflows/
 │       └── ci.yml                  # GitHub Actions CI for Python + C++
+├── docs/
+│   ├── hetopt.png                  # Repository banner
+│   └── PULL_REQUEST.md             # Version-controlled PR summary
 ├── python/
 │   ├── pyproject.toml              # Hatch build config, astropy dependency
+│   ├── README.md                   # Package-level readme (used by the build)
 │   ├── src/
 │   │   └── hohmann_het/
 │   │       ├── __init__.py
@@ -165,6 +173,7 @@ print(f"Isp       : {het.isp:.1f}")
 print(f"Thrust    : {het.thrust:.4f}")
 
 # Optimize Isp for 1000 kg spacecraft, 5 kW thruster
+# (astropy Quantities auto-convert; a bare-float delta-V is interpreted as m/s)
 result = optimize_isp(1000.0 * u.kg, transfer.total_dv, 5000.0 * u.W, 0.55)
 print(f"Optimal Isp : {result.optimal_isp:.1f}")
 print(f"Propellant  : {result.propellant_mass:.2f}")
@@ -264,6 +273,17 @@ Reference values (Vallado Table 6-1), verified across all three languages:
 | Arrival burn (dv2) | ~1.46 | km/s |
 | Total delta-V | ~3.85 | km/s |
 | Transfer time | ~5.29 | hours |
+
+The exact golden literals pinned verbatim in all three test suites (`AbsTol 1e-6`):
+
+| Quantity | Golden Value | Unit |
+|----------|--------------|------|
+| Departure burn (dv1) | 2.3974725168152418 | km/s |
+| Arrival burn (dv2) | 1.4564866995935786 | km/s |
+| Total delta-V | 3.8539592164088203 | km/s |
+| Transfer time | 19048.562509797113 | s |
+| HET exhaust velocity (300 V, eta 0.50) | 14848.078200420248 | m/s |
+| HET specific impulse (300 V, eta 0.50) | 1514.0826072532668 | s |
 
 ---
 
