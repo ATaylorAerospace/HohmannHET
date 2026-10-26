@@ -48,7 +48,12 @@ classdef Optimization
                 func (1,1) {mustBeA(func, "function_handle")}
                 a    (1,1) double {mustBeFinite}
                 b    (1,1) double {mustBeFinite}
-                tol  (1,1) double {mustBePositive} = 1e-9
+                tol  (1,1) double {mustBePositive, mustBeFinite} = 1e-9
+            end
+
+            if b <= a
+                error('hohmann_het:Optimization:badBounds', ...
+                      'Right bound b must be greater than left bound a.');
             end
 
             gr = (sqrt(5.0) + 1.0) / 2.0;  % golden ratio
@@ -96,7 +101,7 @@ classdef Optimization
         %
         % Inputs:
         %   m_initial        - spacecraft wet mass [kg],   positive scalar
-        %   delta_v_m_s      - required delta-V [m/s],     non-negative scalar
+        %   delta_v_m_s      - required delta-V [m/s],     positive scalar
         %   discharge_power  - thruster power [W],          positive scalar
         %   anode_efficiency - eta_a in (0,1),              scalar
         %   isp_min          - lower Isp bound [s]          (default 500)
@@ -112,12 +117,12 @@ classdef Optimization
 
             arguments
                 m_initial        (1,1) double {mustBePositive,    mustBeFinite}
-                delta_v_m_s      (1,1) double {mustBePositive, mustBeFinite}
+                delta_v_m_s      (1,1) double {mustBePositive,    mustBeFinite}
                 discharge_power  (1,1) double {mustBePositive,    mustBeFinite}
                 anode_efficiency (1,1) double {mustBeInRange(anode_efficiency, 0, 1, "exclusive", "exclusive")}
                 isp_min          (1,1) double {mustBePositive,    mustBeFinite} = 500.0
                 isp_max          (1,1) double {mustBePositive,    mustBeFinite} = 5000.0
-                lambda_weight    (1,1) double {mustBePositive,    mustBeFinite} = 1e-4
+                lambda_weight    (1,1) double {mustBeNonnegative, mustBeFinite} = 1e-4
             end
 
             if isp_max <= isp_min
@@ -155,7 +160,7 @@ classdef Optimization
 
         function result = min_propellant_transfer(h1, h2, m_initial, ...
                                                    discharge_power, anode_efficiency, ...
-                                                   isp_min, isp_max)
+                                                   isp_min, isp_max, lambda_weight)
         % MIN_PROPELLANT_TRANSFER  Compute Hohmann dv then optimize Isp.
         %
         % Convenience wrapper combining Dynamics.compute_hohmann and optimize_isp.
@@ -165,20 +170,22 @@ classdef Optimization
         %   m_initial        - spacecraft wet mass [kg]
         %   discharge_power  - thruster power [W]
         %   anode_efficiency - eta_a in (0,1)
-        %   isp_min          - lower Isp bound [s]  (default 500)
-        %   isp_max          - upper Isp bound [s]  (default 5000)
+        %   isp_min          - lower Isp bound [s]          (default 500)
+        %   isp_max          - upper Isp bound [s]          (default 5000)
+        %   lambda_weight    - burn-time penalty weight     (default 1e-4)
         %
         % Output:
         %   result - same struct as optimize_isp
 
             arguments
-                h1               (1,1) double {mustBePositive, mustBeFinite}
-                h2               (1,1) double {mustBePositive, mustBeFinite}
-                m_initial        (1,1) double {mustBePositive, mustBeFinite}
-                discharge_power  (1,1) double {mustBePositive, mustBeFinite}
+                h1               (1,1) double {mustBePositive,    mustBeFinite}
+                h2               (1,1) double {mustBePositive,    mustBeFinite}
+                m_initial        (1,1) double {mustBePositive,    mustBeFinite}
+                discharge_power  (1,1) double {mustBePositive,    mustBeFinite}
                 anode_efficiency (1,1) double {mustBeInRange(anode_efficiency, 0, 1, "exclusive", "exclusive")}
-                isp_min          (1,1) double {mustBePositive, mustBeFinite} = 500.0
-                isp_max          (1,1) double {mustBePositive, mustBeFinite} = 5000.0
+                isp_min          (1,1) double {mustBePositive,    mustBeFinite} = 500.0
+                isp_max          (1,1) double {mustBePositive,    mustBeFinite} = 5000.0
+                lambda_weight    (1,1) double {mustBeNonnegative, mustBeFinite} = 1e-4
             end
 
             transfer = hohmann_het.Dynamics.compute_hohmann(h1, h2);
@@ -186,7 +193,7 @@ classdef Optimization
 
             result = hohmann_het.Optimization.optimize_isp( ...
                 m_initial, dv_m_s, discharge_power, anode_efficiency, ...
-                isp_min, isp_max);
+                isp_min, isp_max, lambda_weight);
         end
 
     end % methods (Static)

@@ -10,12 +10,13 @@ identical numerical behavior across the tri-language implementation.
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 import astropy.units as u
 
 from .propulsion import G0
+
 
 # ---------------------------------------------------------------------------
 # Result dataclass
@@ -72,46 +73,62 @@ def golden_section_minimize(
     func : callable
         Scalar function :math:`f : \mathbb{R} \to \mathbb{R}` to minimize.
     a : float
-        Left bound of the search interval.
+        Left bound of the search interval. Must satisfy ``a < b``.
     b : float
-        Right bound of the search interval.
+        Right bound of the search interval. Must satisfy ``b > a``.
     tol : float
-        Convergence tolerance on the interval width.
+        Convergence tolerance on the interval width. Must be positive.
 
     Returns
     -------
     float
         Approximate location of the minimum.
+
+    Raises
+    ------
+    ValueError
+        If ``a``, ``b``, or ``tol`` is non-finite, ``b <= a``, or ``tol <= 0``.
     """
+    a_val = float(a)
+    b_val = float(b)
+    tol_val = float(tol)
+
+    if not (math.isfinite(a_val) and math.isfinite(b_val) and math.isfinite(tol_val)):
+        raise ValueError("Search bounds and tolerance must be finite.")
+    if b_val <= a_val:
+        raise ValueError("Search bounds must satisfy a < b.")
+    if tol_val <= 0.0:
+        raise ValueError("Convergence tolerance must be strictly positive.")
+
     gr = (math.sqrt(5.0) + 1.0) / 2.0  # golden ratio
-    c = b - (b - a) / gr
-    d = a + (b - a) / gr
+    c = b_val - (b_val - a_val) / gr
+    d = a_val + (b_val - a_val) / gr
     fc = func(c)
     fd = func(d)
 
-    while abs(b - a) > tol:
+    while abs(b_val - a_val) > tol_val:
         if fc < fd:
-            b, d, fd = d, c, fc
-            c = b - (b - a) / gr
+            b_val, d, fd = d, c, fc
+            c = b_val - (b_val - a_val) / gr
             fc = func(c)
         else:
-            a, c, fc = c, d, fd
-            d = a + (b - a) / gr
+            a_val, c, fc = c, d, fd
+            d = a_val + (b_val - a_val) / gr
             fd = func(d)
 
-    return (a + b) / 2.0
+    return (a_val + b_val) / 2.0
 
 
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 def optimize_isp(
-    m_initial: "u.Quantity | float",
-    delta_v: "u.Quantity | float",
-    discharge_power: "u.Quantity | float",
+    m_initial: u.Quantity | float,
+    delta_v: u.Quantity | float,
+    discharge_power: u.Quantity | float,
     anode_efficiency: float,
-    isp_min: "u.Quantity | float" = 500.0,
-    isp_max: "u.Quantity | float" = 5000.0,
+    isp_min: u.Quantity | float = 500.0,
+    isp_max: u.Quantity | float = 5000.0,
     lambda_weight: float = 1e-4,
 ) -> OptimizationResult:
     r"""Optimize specific impulse to minimize a composite propellant-time objective.
@@ -151,7 +168,7 @@ def optimize_isp(
     isp_max : astropy.units.Quantity or float
         Upper bound of Isp search [s]. Default 5000 s.
     lambda_weight : float
-        Dimensionless weighting factor for the burn-time term.
+        Dimensionless weighting factor :math:`\lambda \ge 0` for the burn-time term.
 
     Returns
     -------
@@ -169,20 +186,23 @@ def optimize_isp(
     if not isinstance(isp_max, u.Quantity):
         isp_max = float(isp_max) * u.s
 
-    m0     = m_initial.to(u.kg).value
-    dv_ms  = delta_v.to(u.m / u.s).value
-    P      = discharge_power.to(u.W).value
-    isp_lo = isp_min.to(u.s).value
-    isp_hi = isp_max.to(u.s).value
-    eta_a  = anode_efficiency
-    g0     = G0.value
+    m0     = float(m_initial.to(u.kg).value)
+    dv_ms  = float(delta_v.to(u.m / u.s).value)
+    P      = float(discharge_power.to(u.W).value)
+    isp_lo = float(isp_min.to(u.s).value)
+    isp_hi = float(isp_max.to(u.s).value)
+    eta_a  = float(anode_efficiency)
+    lam    = float(lambda_weight)
+    g0     = float(G0.value)
 
-    if m0 <= 0.0 or dv_ms <= 0.0 or P <= 0.0:
-        raise ValueError("Mass, delta-V, and power must be strictly positive.")
-    if not (0.0 < eta_a < 1.0):
+    if not (math.isfinite(m0) and math.isfinite(dv_ms) and math.isfinite(P)) or m0 <= 0.0 or dv_ms <= 0.0 or P <= 0.0:
+        raise ValueError("Mass, delta-V, and power must be finite and strictly positive.")
+    if not math.isfinite(eta_a) or not (0.0 < eta_a < 1.0):
         raise ValueError("Anode efficiency must be in (0, 1).")
-    if isp_lo <= 0.0 or isp_hi <= isp_lo:
-        raise ValueError("Isp bounds must satisfy 0 < isp_min < isp_max.")
+    if not (math.isfinite(isp_lo) and math.isfinite(isp_hi)) or isp_lo <= 0.0 or isp_hi <= isp_lo:
+        raise ValueError("Isp bounds must be finite and satisfy 0 < isp_min < isp_max.")
+    if not math.isfinite(lam) or lam < 0.0:
+        raise ValueError("lambda_weight must be finite and non-negative.")
 
     # Normalisation reference: burn time at minimum Isp
     ve_ref = isp_lo * g0
@@ -192,7 +212,7 @@ def optimize_isp(
         ve      = isp_s * g0
         mp_frac = 1.0 - math.exp(-dv_ms / ve)
         t_burn  = m0 * dv_ms * ve / (2.0 * eta_a * P)
-        return mp_frac + lambda_weight * (t_burn / T_ref)
+        return mp_frac + lam * (t_burn / T_ref)
 
     isp_opt = golden_section_minimize(objective, isp_lo, isp_hi)
     ve_opt  = isp_opt * g0
@@ -209,15 +229,16 @@ def optimize_isp(
 
 
 def min_propellant_transfer(
-    h1: "u.Quantity | float",
-    h2: "u.Quantity | float",
-    m_initial: "u.Quantity | float",
-    discharge_power: "u.Quantity | float",
+    h1: u.Quantity | float,
+    h2: u.Quantity | float,
+    m_initial: u.Quantity | float,
+    discharge_power: u.Quantity | float,
     anode_efficiency: float,
-    isp_min: "u.Quantity | float" = 500.0,
-    isp_max: "u.Quantity | float" = 5000.0,
+    isp_min: u.Quantity | float = 500.0,
+    isp_max: u.Quantity | float = 5000.0,
+    lambda_weight: float = 1e-4,
 ) -> OptimizationResult:
-    """Compute Hohmann delta-V then optimize Isp for minimum propellant.
+    r"""Compute Hohmann delta-V then optimize Isp for minimum propellant.
 
     Convenience wrapper combining :func:`~hohmann_het.dynamics.compute_hohmann`
     and :func:`optimize_isp`.
@@ -238,6 +259,8 @@ def min_propellant_transfer(
         Lower Isp search bound [s].
     isp_max : astropy.units.Quantity or float
         Upper Isp search bound [s].
+    lambda_weight : float
+        Dimensionless burn-time penalty weight :math:`\lambda \ge 0` (default 1e-4).
 
     Returns
     -------
@@ -253,4 +276,5 @@ def min_propellant_transfer(
         anode_efficiency=anode_efficiency,
         isp_min=isp_min,
         isp_max=isp_max,
+        lambda_weight=lambda_weight,
     )

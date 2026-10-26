@@ -5,13 +5,14 @@ Validates golden-section search correctness, optimization physics,
 and the min_propellant_transfer convenience wrapper.
 """
 import math
-import pytest
+
 import astropy.units as u
+import pytest
 
 from hohmann_het.optimization import (
     golden_section_minimize,
-    optimize_isp,
     min_propellant_transfer,
+    optimize_isp,
 )
 
 TOL = 1e-6
@@ -43,6 +44,18 @@ class TestGoldenSectionMinimize:
             0.0, 5.0, tol=1e-12,
         )
         assert abs(result - 2.718281828) < 1e-9
+
+    def test_invalid_bounds_raises(self):
+        with pytest.raises(ValueError):
+            golden_section_minimize(lambda x: x**2, 5.0, 1.0)
+
+    def test_non_positive_tol_raises(self):
+        with pytest.raises(ValueError):
+            golden_section_minimize(lambda x: x**2, 0.0, 5.0, tol=0.0)
+
+    def test_nan_bounds_raises(self):
+        with pytest.raises(ValueError):
+            golden_section_minimize(lambda x: x**2, float("nan"), 5.0)
 
 
 class TestOptimizeIsp:
@@ -119,6 +132,18 @@ class TestOptimizeIsp:
         with pytest.raises(ValueError):
             optimize_isp(M0, DV, P, ETA, isp_min=3000.0, isp_max=1000.0)
 
+    def test_invalid_negative_lambda_weight(self):
+        with pytest.raises(ValueError):
+            optimize_isp(M0, DV, P, ETA, lambda_weight=-1e-4)
+
+    def test_zero_lambda_weight_allowed(self):
+        r = optimize_isp(M0, DV, P, ETA, lambda_weight=0.0)
+        assert abs(r.optimal_isp.value - 5000.0) < 1e-6
+
+    def test_nan_input_raises(self):
+        with pytest.raises(ValueError):
+            optimize_isp(float("nan"), DV, P, ETA)
+
 
 class TestMinPropellantTransfer:
     def test_end_to_end_leo_geo(self):
@@ -141,3 +166,31 @@ class TestMinPropellantTransfer:
 
         assert abs(r_direct.optimal_isp.value - r_wrap.optimal_isp.value) < TOL
         assert abs(r_direct.propellant_mass.value - r_wrap.propellant_mass.value) < TOL
+
+    def test_forwards_lambda_weight(self):
+        from hohmann_het.dynamics import compute_hohmann
+        transfer = compute_hohmann(400.0, 35786.0)
+
+        r_direct = optimize_isp(M0, transfer.total_dv, P, ETA, lambda_weight=0.1)
+        r_wrap   = min_propellant_transfer(
+            400.0, 35786.0, M0, P, ETA, lambda_weight=0.1
+        )
+        assert abs(r_direct.optimal_isp.value - r_wrap.optimal_isp.value) < TOL
+
+
+class TestOptimizationGolden:
+    """Hardcoded golden values shared verbatim across the Python, C++, and
+    MATLAB suites for interior Isp optimization (lambda_weight=0.1).
+    """
+
+    def test_golden_interior_optimal_isp(self):
+        r = optimize_isp(1000.0, 3852.6, 5000.0, 0.55, 500.0, 5000.0, 0.1)
+        assert abs(r.optimal_isp.value - 1187.9261754441786) < 1e-6
+
+    def test_golden_interior_propellant_mass(self):
+        r = optimize_isp(1000.0, 3852.6, 5000.0, 0.55, 500.0, 5000.0, 0.1)
+        assert abs(r.propellant_mass.value - 281.5845876650631) < 1e-6
+
+    def test_golden_interior_objective(self):
+        r = optimize_isp(1000.0, 3852.6, 5000.0, 0.55, 500.0, 5000.0, 0.1)
+        assert abs(r.objective_value - 0.5191698227538988) < 1e-6

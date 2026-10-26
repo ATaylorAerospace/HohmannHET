@@ -178,6 +178,18 @@ classdef TestPropulsion < matlab.unittest.TestCase
             tc.verifyGreaterThan(tb2, tb1);
         end
 
+        function testZeroDvZeroBurnTime(tc)
+            s  = hohmann_het.Propulsion.compute_het_state(tc.V_D, tc.P_D, tc.ETA);
+            tb = hohmann_het.Propulsion.burn_time(s.thrust, s.mass_flow, 0.0, 1000.0);
+            tc.verifyEqual(tb, 0.0, 'AbsTol', tc.TOL);
+        end
+
+        function testInvalidThrustThrows(tc)
+            tc.verifyError( ...
+                @() hohmann_het.Propulsion.burn_time(-1.0, 1e-4, 3000.0, 1000.0), ...
+                'MATLAB:validators:mustBePositive');
+        end
+
     end
 
     % -----------------------------------------------------------------------

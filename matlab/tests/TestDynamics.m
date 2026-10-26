@@ -167,6 +167,16 @@ classdef TestDynamics < matlab.unittest.TestCase
                            'MATLAB:validators:mustBePositive');
         end
 
+        function testNanH1Throws(tc)
+            tc.verifyError(@() hohmann_het.Dynamics.compute_hohmann(NaN, tc.H2), ...
+                           'MATLAB:validators:mustBeNonNan');
+        end
+
+        function testInfH2Throws(tc)
+            tc.verifyError(@() hohmann_het.Dynamics.compute_hohmann(tc.H1, Inf), ...
+                           'MATLAB:validators:mustBeFinite');
+        end
+
     end
 
     % -----------------------------------------------------------------------

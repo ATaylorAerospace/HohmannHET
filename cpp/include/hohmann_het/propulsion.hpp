@@ -85,9 +85,10 @@ struct HETState {
 {
     using namespace prop_constants;
 
-    if (discharge_voltage <= 0.0 || discharge_power <= 0.0)
-        throw std::invalid_argument("Discharge voltage and power must be positive.");
-    if (anode_efficiency <= 0.0 || anode_efficiency >= 1.0)
+    if (!std::isfinite(discharge_voltage) || !std::isfinite(discharge_power) ||
+        discharge_voltage <= 0.0 || discharge_power <= 0.0)
+        throw std::invalid_argument("Discharge voltage and power must be finite and positive.");
+    if (!std::isfinite(anode_efficiency) || anode_efficiency <= 0.0 || anode_efficiency >= 1.0)
         throw std::invalid_argument("Anode efficiency must be in (0, 1).");
 
     const double ve    = std::sqrt(2.0 * anode_efficiency * E_CHARGE
@@ -118,10 +119,10 @@ struct HETState {
     double delta_v,
     double isp)
 {
-    if (m_initial <= 0.0 || isp <= 0.0)
-        throw std::invalid_argument("m_initial and isp must be positive.");
-    if (delta_v < 0.0)
-        throw std::invalid_argument("delta_v must be non-negative.");
+    if (!std::isfinite(m_initial) || !std::isfinite(isp) || m_initial <= 0.0 || isp <= 0.0)
+        throw std::invalid_argument("m_initial and isp must be finite and positive.");
+    if (!std::isfinite(delta_v) || delta_v < 0.0)
+        throw std::invalid_argument("delta_v must be finite and non-negative.");
 
     const double ve = isp * constants::G0;
     return m_initial * (1.0 - std::exp(-delta_v / ve));
@@ -150,10 +151,11 @@ struct HETState {
     double delta_v,
     double m_initial)
 {
-    if (thrust <= 0.0 || mass_flow <= 0.0 || m_initial <= 0.0)
-        throw std::invalid_argument("Thrust, mass_flow, and m_initial must be positive.");
-    if (delta_v < 0.0)
-        throw std::invalid_argument("delta_v must be non-negative.");
+    if (!std::isfinite(thrust) || !std::isfinite(mass_flow) || !std::isfinite(m_initial) ||
+        thrust <= 0.0 || mass_flow <= 0.0 || m_initial <= 0.0)
+        throw std::invalid_argument("Thrust, mass_flow, and m_initial must be finite and positive.");
+    if (!std::isfinite(delta_v) || delta_v < 0.0)
+        throw std::invalid_argument("delta_v must be finite and non-negative.");
 
     const double ve = thrust / mass_flow;
     return (m_initial / mass_flow) * (1.0 - std::exp(-delta_v / ve));

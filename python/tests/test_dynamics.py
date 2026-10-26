@@ -6,15 +6,16 @@ Validates Keplerian dynamics against known LEO-to-GEO benchmark values
 Precision requirement: all core values within 1e-6 of reference.
 """
 import math
-import pytest
+
 import astropy.units as u
+import pytest
 
 from hohmann_het.dynamics import (
-    compute_hohmann,
-    circular_velocity,
-    orbital_period,
     MU,
     R_EARTH,
+    circular_velocity,
+    compute_hohmann,
+    orbital_period,
 )
 
 # ---------------------------------------------------------------------------
@@ -204,6 +205,14 @@ class TestComputeHohmannErrors:
         with pytest.raises(ValueError):
             compute_hohmann(H1, 0.0)
 
+    def test_nan_h1(self):
+        with pytest.raises(ValueError):
+            compute_hohmann(float("nan"), H2)
+
+    def test_inf_h2(self):
+        with pytest.raises(ValueError):
+            compute_hohmann(H1, float("inf"))
+
 
 # ---------------------------------------------------------------------------
 # circular_velocity
@@ -220,6 +229,14 @@ class TestCircularVelocity:
     def test_negative_radius(self):
         with pytest.raises(ValueError):
             circular_velocity(-1.0)
+
+    def test_zero_radius(self):
+        with pytest.raises(ValueError):
+            circular_velocity(0.0)
+
+    def test_nan_radius(self):
+        with pytest.raises(ValueError):
+            circular_velocity(float("nan"))
 
 
 # ---------------------------------------------------------------------------
@@ -240,6 +257,14 @@ class TestOrbitalPeriod:
         T = orbital_period(a)
         expected = 2.0 * math.pi * a * math.sqrt(a / MU_REF)
         assert abs(T.value - expected) < TOL
+
+    def test_negative_sma(self):
+        with pytest.raises(ValueError):
+            orbital_period(-1.0)
+
+    def test_nan_sma(self):
+        with pytest.raises(ValueError):
+            orbital_period(float("nan"))
 
 
 # ---------------------------------------------------------------------------

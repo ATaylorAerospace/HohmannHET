@@ -43,6 +43,13 @@ classdef TestOptimization < matlab.unittest.TestCase
             tc.verifyEqual(x_min, 2.718281828, 'AbsTol', 1e-9);
         end
 
+        function testGoldenSectionBadBoundsThrows(tc)
+            f = @(x) x^2;
+            tc.verifyError( ...
+                @() hohmann_het.Optimization.golden_section_minimize(f, 5.0, 1.0), ...
+                'hohmann_het:Optimization:badBounds');
+        end
+
     end
 
     % -----------------------------------------------------------------------
@@ -102,6 +109,12 @@ classdef TestOptimization < matlab.unittest.TestCase
                 'MATLAB:validators:mustBePositive');
         end
 
+        function testZeroLambdaAllowed(tc)
+            r = hohmann_het.Optimization.optimize_isp( ...
+                tc.M0, tc.DV, tc.P, tc.ETA, 800.0, 4000.0, 0.0);
+            tc.verifyEqual(r.optimal_isp, 4000.0, 'AbsTol', 1e-4);
+        end
+
     end
 
     % -----------------------------------------------------------------------
@@ -129,6 +142,34 @@ classdef TestOptimization < matlab.unittest.TestCase
 
             tc.verifyEqual(r_direct.optimal_isp,    r_wrap.optimal_isp,    'AbsTol', tc.TOL);
             tc.verifyEqual(r_direct.propellant_mass, r_wrap.propellant_mass, 'AbsTol', tc.TOL);
+        end
+
+        function testLambdaWeightForwarding(tc)
+            transfer = hohmann_het.Dynamics.compute_hohmann(400.0, 35786.0);
+            dv_ms    = transfer.total_dv * 1000.0;
+
+            r_direct = hohmann_het.Optimization.optimize_isp( ...
+                tc.M0, dv_ms, tc.P, tc.ETA, 500.0, 5000.0, 0.1);
+            r_wrap   = hohmann_het.Optimization.min_propellant_transfer( ...
+                400.0, 35786.0, tc.M0, tc.P, tc.ETA, 500.0, 5000.0, 0.1);
+
+            tc.verifyEqual(r_direct.optimal_isp,     r_wrap.optimal_isp,     'AbsTol', tc.TOL);
+            tc.verifyEqual(r_direct.propellant_mass, r_wrap.propellant_mass, 'AbsTol', tc.TOL);
+        end
+
+    end
+
+    % -----------------------------------------------------------------------
+    % Golden reference values (shared verbatim with Python and C++ suites)
+    % -----------------------------------------------------------------------
+    methods (Test, TestTags = {'optimization','golden'})
+
+        function testGoldenInteriorOptimum(tc)
+            r = hohmann_het.Optimization.optimize_isp( ...
+                tc.M0, tc.DV, tc.P, tc.ETA, 500.0, 5000.0, 0.1);
+            tc.verifyEqual(r.optimal_isp,     1187.9261754441786, 'AbsTol', 1e-4);
+            tc.verifyEqual(r.propellant_mass, 281.5845876650631,  'AbsTol', 1e-4);
+            tc.verifyEqual(r.objective_value, 0.5191698227538988, 'AbsTol', 1e-6);
         end
 
     end
