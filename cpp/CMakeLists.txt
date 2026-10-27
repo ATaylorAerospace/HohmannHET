@@ -21,17 +21,33 @@ target_include_directories(hohmann_het INTERFACE
 )
 target_compile_features(hohmann_het INTERFACE cxx_std_20)
 
-# Strict warnings on supported compilers
+# Strict warnings for this project's own translation units (the test suite).
+# These are deliberately NOT attached to the INTERFACE library: doing so would
+# force -Wall/-Wextra/-Wpedantic (or /W4) onto every downstream target that
+# links hohmann_het via add_subdirectory(), overriding the consumer's own
+# warning policy.
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    target_compile_options(hohmann_het INTERFACE -Wall -Wextra -Wpedantic)
+    set(HOHMANN_HET_WARNING_FLAGS -Wall -Wextra -Wpedantic)
 elseif(MSVC)
-    target_compile_options(hohmann_het INTERFACE /W4)
+    set(HOHMANN_HET_WARNING_FLAGS /W4)
+else()
+    set(HOHMANN_HET_WARNING_FLAGS "")
 endif()
 
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
-option(HOHMANN_HET_BUILD_TESTS "Build GoogleTest suite" ON)
+# Build the GoogleTest suite by default only when this is the top-level
+# project. When consumed via add_subdirectory() the default is OFF so that a
+# downstream build does not fetch/compile GoogleTest and three test binaries
+# it never asked for. Consumers can still opt in with
+# -DHOHMANN_HET_BUILD_TESTS=ON.
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    set(HOHMANN_HET_BUILD_TESTS_DEFAULT ON)
+else()
+    set(HOHMANN_HET_BUILD_TESTS_DEFAULT OFF)
+endif()
+option(HOHMANN_HET_BUILD_TESTS "Build GoogleTest suite" ${HOHMANN_HET_BUILD_TESTS_DEFAULT})
 if(HOHMANN_HET_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)

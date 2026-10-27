@@ -174,7 +174,7 @@ TEST_F(DynamicsTest, SmallAltitudeDifference) {
 }
 
 TEST_F(DynamicsTest, LargeAltitudeDifference) {
-    EXPECT_NO_THROW(compute_hohmann(400.0, 100000.0));
+    EXPECT_NO_THROW(static_cast<void>(compute_hohmann(400.0, 100000.0)));
 }
 
 
@@ -182,35 +182,35 @@ TEST_F(DynamicsTest, LargeAltitudeDifference) {
 // compute_hohmann - invalid inputs
 // ---------------------------------------------------------------------------
 TEST(DynamicsValidation, NegativeH1Throws) {
-    EXPECT_THROW(compute_hohmann(-100.0, GEO_ALT), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(compute_hohmann(-100.0, GEO_ALT)), std::invalid_argument);
 }
 
 TEST(DynamicsValidation, NegativeH2Throws) {
-    EXPECT_THROW(compute_hohmann(LEO_ALT, -100.0), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(compute_hohmann(LEO_ALT, -100.0)), std::invalid_argument);
 }
 
 TEST(DynamicsValidation, ZeroH1Throws) {
-    EXPECT_THROW(compute_hohmann(0.0, GEO_ALT), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(compute_hohmann(0.0, GEO_ALT)), std::invalid_argument);
 }
 
 TEST(DynamicsValidation, ZeroH2Throws) {
-    EXPECT_THROW(compute_hohmann(LEO_ALT, 0.0), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(compute_hohmann(LEO_ALT, 0.0)), std::invalid_argument);
 }
 
 TEST(DynamicsValidation, BothNegativeThrows) {
-    EXPECT_THROW(compute_hohmann(-100.0, -200.0), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(compute_hohmann(-100.0, -200.0)), std::invalid_argument);
 }
 
 TEST(DynamicsValidation, NanInputThrows) {
     const double nan = std::numeric_limits<double>::quiet_NaN();
-    EXPECT_THROW(compute_hohmann(nan, GEO_ALT), std::invalid_argument);
-    EXPECT_THROW(compute_hohmann(LEO_ALT, nan), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(compute_hohmann(nan, GEO_ALT)), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(compute_hohmann(LEO_ALT, nan)), std::invalid_argument);
 }
 
 TEST(DynamicsValidation, InfInputThrows) {
     const double inf = std::numeric_limits<double>::infinity();
-    EXPECT_THROW(compute_hohmann(inf, GEO_ALT), std::invalid_argument);
-    EXPECT_THROW(compute_hohmann(LEO_ALT, inf), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(compute_hohmann(inf, GEO_ALT)), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(compute_hohmann(LEO_ALT, inf)), std::invalid_argument);
 }
 
 
@@ -223,17 +223,17 @@ TEST(DynamicsCircularVelocity, LeoValue) {
 }
 
 TEST(DynamicsCircularVelocity, NegativeRadiusThrows) {
-    EXPECT_THROW(circular_velocity(-1.0), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(circular_velocity(-1.0)), std::invalid_argument);
 }
 
 TEST(DynamicsCircularVelocity, ZeroRadiusThrows) {
-    EXPECT_THROW(circular_velocity(0.0), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(circular_velocity(0.0)), std::invalid_argument);
 }
 
 TEST(DynamicsCircularVelocity, NonFiniteRadiusThrows) {
-    EXPECT_THROW(circular_velocity(std::numeric_limits<double>::quiet_NaN()),
+    EXPECT_THROW(static_cast<void>(circular_velocity(std::numeric_limits<double>::quiet_NaN())),
                  std::invalid_argument);
-    EXPECT_THROW(circular_velocity(std::numeric_limits<double>::infinity()),
+    EXPECT_THROW(static_cast<void>(circular_velocity(std::numeric_limits<double>::infinity())),
                  std::invalid_argument);
 }
 
@@ -253,13 +253,13 @@ TEST(DynamicsOrbitalPeriod, FormulaConsistency) {
 }
 
 TEST(DynamicsOrbitalPeriod, NegativeSmaThrows) {
-    EXPECT_THROW(orbital_period(-1.0), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(orbital_period(-1.0)), std::invalid_argument);
 }
 
 TEST(DynamicsOrbitalPeriod, NonFiniteSmaThrows) {
-    EXPECT_THROW(orbital_period(std::numeric_limits<double>::quiet_NaN()),
+    EXPECT_THROW(static_cast<void>(orbital_period(std::numeric_limits<double>::quiet_NaN())),
                  std::invalid_argument);
-    EXPECT_THROW(orbital_period(std::numeric_limits<double>::infinity()),
+    EXPECT_THROW(static_cast<void>(orbital_period(std::numeric_limits<double>::infinity())),
                  std::invalid_argument);
 }
 

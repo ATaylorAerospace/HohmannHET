@@ -37,7 +37,7 @@ The library delivers identical numerical results across **Python**, **C++20**, a
 - References: Vallado "Fundamentals of Astrodynamics and Applications," Curtis "Orbital Mechanics for Engineering Students," Goebel & Katz "Fundamentals of Electric Propulsion"
 
 ### 🧪 **Comprehensive Testing & CI**
-- **Python:** `pytest` suite (100 tests) with `astropy.units` quantity checks and PEP 561 inline type support (`py.typed`)
+- **Python:** `pytest` suite (124 tests) with `astropy.units` quantity checks and PEP 561 inline type support (`py.typed`)
 - **MATLAB:** `matlab.unittest` class-based tests with `arguments` validation
 - **C++:** GoogleTest (gtest/gmock) with parameterized scenarios
 - All suites validate against LEO-to-GEO benchmark values (Vallado Table 6-1)
@@ -68,6 +68,7 @@ HohmannHET/
 │   │       ├── optimization.py     # Golden-section Isp optimizer
 │   │       └── py.typed            # PEP 561 marker for inline type support
 │   └── tests/
+│       ├── __init__.py
 │       ├── test_dynamics.py
 │       ├── test_propulsion.py
 │       └── test_optimization.py
