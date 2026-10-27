@@ -54,7 +54,7 @@ classdef Propulsion
             arguments
                 discharge_voltage  (1,1) double {mustBePositive, mustBeFinite}
                 discharge_power    (1,1) double {mustBePositive, mustBeFinite}
-                anode_efficiency   (1,1) double {mustBeInRange(anode_efficiency, 0, 1, "exclusive", "exclusive")}
+                anode_efficiency   (1,1) double {mustBeInRange(anode_efficiency, 0, 1, "exclusive")}
             end
 
             G0       = hohmann_het.Propulsion.G0;

@@ -140,42 +140,42 @@ TEST_F(OptimizeIspTest, BurnTimeConsistencyWithFormula) {
 // optimize_isp - invalid inputs
 // ---------------------------------------------------------------------------
 TEST(OptimizeIspValidation, NegativeMassThrows) {
-    EXPECT_THROW(optimize_isp(-100.0, DV, P, ETA), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(optimize_isp(-100.0, DV, P, ETA)), std::invalid_argument);
 }
 
 TEST(OptimizeIspValidation, NegativeDvThrows) {
-    EXPECT_THROW(optimize_isp(M0, -1.0, P, ETA), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(optimize_isp(M0, -1.0, P, ETA)), std::invalid_argument);
 }
 
 TEST(OptimizeIspValidation, ZeroDvThrows) {
     // delta_v == 0 would make the burn-time normalisation 0/0 (NaN).
-    EXPECT_THROW(optimize_isp(M0, 0.0, P, ETA), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(optimize_isp(M0, 0.0, P, ETA)), std::invalid_argument);
 }
 
 TEST(OptimizeIspValidation, NegativePowerThrows) {
-    EXPECT_THROW(optimize_isp(M0, DV, -100.0, ETA), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(optimize_isp(M0, DV, -100.0, ETA)), std::invalid_argument);
 }
 
 TEST(OptimizeIspValidation, EfficiencyZeroThrows) {
-    EXPECT_THROW(optimize_isp(M0, DV, P, 0.0), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(optimize_isp(M0, DV, P, 0.0)), std::invalid_argument);
 }
 
 TEST(OptimizeIspValidation, EfficiencyOneThrows) {
-    EXPECT_THROW(optimize_isp(M0, DV, P, 1.0), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(optimize_isp(M0, DV, P, 1.0)), std::invalid_argument);
 }
 
 TEST(OptimizeIspValidation, BadIspBoundsThrows) {
-    EXPECT_THROW(optimize_isp(M0, DV, P, ETA, 3000.0, 1000.0),
+    EXPECT_THROW(static_cast<void>(optimize_isp(M0, DV, P, ETA, 3000.0, 1000.0)),
                  std::invalid_argument);
 }
 
 TEST(OptimizeIspValidation, EqualIspBoundsThrows) {
-    EXPECT_THROW(optimize_isp(M0, DV, P, ETA, 1500.0, 1500.0),
+    EXPECT_THROW(static_cast<void>(optimize_isp(M0, DV, P, ETA, 1500.0, 1500.0)),
                  std::invalid_argument);
 }
 
 TEST(OptimizeIspValidation, NegativeLambdaThrows) {
-    EXPECT_THROW(optimize_isp(M0, DV, P, ETA, 800.0, 4000.0, -0.1),
+    EXPECT_THROW(static_cast<void>(optimize_isp(M0, DV, P, ETA, 800.0, 4000.0, -0.1)),
                  std::invalid_argument);
 }
 
@@ -187,9 +187,9 @@ TEST(OptimizeIspValidation, ZeroLambdaAllowed) {
 TEST(OptimizeIspValidation, NonFiniteThrows) {
     const double nan = std::numeric_limits<double>::quiet_NaN();
     const double inf = std::numeric_limits<double>::infinity();
-    EXPECT_THROW(optimize_isp(nan, DV, P, ETA), std::invalid_argument);
-    EXPECT_THROW(optimize_isp(M0, inf, P, ETA), std::invalid_argument);
-    EXPECT_THROW(optimize_isp(M0, DV, P, ETA, 800.0, 4000.0, nan),
+    EXPECT_THROW(static_cast<void>(optimize_isp(nan, DV, P, ETA)), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(optimize_isp(M0, inf, P, ETA)), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(optimize_isp(M0, DV, P, ETA, 800.0, 4000.0, nan)),
                  std::invalid_argument);
 }
 

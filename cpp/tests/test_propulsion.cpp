@@ -28,9 +28,6 @@ static constexpr double TOL    = 1e-6;
 static constexpr double V_D    = 300.0;    // V  (SPT-100 reference)
 static constexpr double P_D    = 1350.0;   // W
 static constexpr double ETA    = 0.50;     // anode efficiency
-static constexpr double VE_REF =           // reference exhaust velocity [m/s]
-    // computed at compile time would require constexpr sqrt - use inline
-    0.0;  // filled in tests via std::sqrt
 
 // ---------------------------------------------------------------------------
 // Fixture
@@ -108,35 +105,35 @@ TEST_F(PropulsionTest, StoredDischargePower) {
 // compute_het_state - invalid inputs
 // ---------------------------------------------------------------------------
 TEST(PropulsionValidation, NegativeVoltageThrows) {
-    EXPECT_THROW(compute_het_state(-300.0, P_D, ETA), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(compute_het_state(-300.0, P_D, ETA)), std::invalid_argument);
 }
 
 TEST(PropulsionValidation, ZeroVoltageThrows) {
-    EXPECT_THROW(compute_het_state(0.0, P_D, ETA), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(compute_het_state(0.0, P_D, ETA)), std::invalid_argument);
 }
 
 TEST(PropulsionValidation, NegativePowerThrows) {
-    EXPECT_THROW(compute_het_state(V_D, -1350.0, ETA), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(compute_het_state(V_D, -1350.0, ETA)), std::invalid_argument);
 }
 
 TEST(PropulsionValidation, EfficiencyZeroThrows) {
-    EXPECT_THROW(compute_het_state(V_D, P_D, 0.0), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(compute_het_state(V_D, P_D, 0.0)), std::invalid_argument);
 }
 
 TEST(PropulsionValidation, EfficiencyOneThrows) {
-    EXPECT_THROW(compute_het_state(V_D, P_D, 1.0), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(compute_het_state(V_D, P_D, 1.0)), std::invalid_argument);
 }
 
 TEST(PropulsionValidation, EfficiencyAboveOneThrows) {
-    EXPECT_THROW(compute_het_state(V_D, P_D, 1.5), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(compute_het_state(V_D, P_D, 1.5)), std::invalid_argument);
 }
 
 TEST(PropulsionValidation, NonFiniteThrows) {
     const double nan = std::numeric_limits<double>::quiet_NaN();
     const double inf = std::numeric_limits<double>::infinity();
-    EXPECT_THROW(compute_het_state(nan, P_D, ETA), std::invalid_argument);
-    EXPECT_THROW(compute_het_state(V_D, inf, ETA), std::invalid_argument);
-    EXPECT_THROW(compute_het_state(V_D, P_D, nan), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(compute_het_state(nan, P_D, ETA)), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(compute_het_state(V_D, inf, ETA)), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(compute_het_state(V_D, P_D, nan)), std::invalid_argument);
 }
 
 
@@ -179,23 +176,23 @@ TEST_F(TsiolkovskyTest, LessThanInitialMass) {
 }
 
 TEST_F(TsiolkovskyTest, NegativeMassThrows) {
-    EXPECT_THROW(propellant_mass(-100.0, DV_MS, isp_ref), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(propellant_mass(-100.0, DV_MS, isp_ref)), std::invalid_argument);
 }
 
 TEST_F(TsiolkovskyTest, NegativeDvThrows) {
-    EXPECT_THROW(propellant_mass(M0, -1.0, isp_ref), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(propellant_mass(M0, -1.0, isp_ref)), std::invalid_argument);
 }
 
 TEST_F(TsiolkovskyTest, ZeroIspThrows) {
-    EXPECT_THROW(propellant_mass(M0, DV_MS, 0.0), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(propellant_mass(M0, DV_MS, 0.0)), std::invalid_argument);
 }
 
 TEST_F(TsiolkovskyTest, NonFiniteThrows) {
     const double nan = std::numeric_limits<double>::quiet_NaN();
     const double inf = std::numeric_limits<double>::infinity();
-    EXPECT_THROW(propellant_mass(nan, DV_MS, isp_ref), std::invalid_argument);
-    EXPECT_THROW(propellant_mass(M0, inf, isp_ref), std::invalid_argument);
-    EXPECT_THROW(propellant_mass(M0, DV_MS, nan), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(propellant_mass(nan, DV_MS, isp_ref)), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(propellant_mass(M0, inf, isp_ref)), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(propellant_mass(M0, DV_MS, nan)), std::invalid_argument);
 }
 
 
@@ -220,26 +217,26 @@ TEST(BurnTimeTest, ZeroDvZeroBurnTime) {
 }
 
 TEST(BurnTimeTest, InvalidThrustThrows) {
-    EXPECT_THROW(burn_time(-1.0, 1e-4, 3000.0, 1000.0), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(burn_time(-1.0, 1e-4, 3000.0, 1000.0)), std::invalid_argument);
 }
 
 TEST(BurnTimeTest, InvalidMassFlowThrows) {
-    EXPECT_THROW(burn_time(0.08, 0.0, 3000.0, 1000.0), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(burn_time(0.08, 0.0, 3000.0, 1000.0)), std::invalid_argument);
 }
 
 TEST(BurnTimeTest, NegativeDeltaVThrows) {
-    EXPECT_THROW(burn_time(0.08, 1e-4, -10.0, 1000.0), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(burn_time(0.08, 1e-4, -10.0, 1000.0)), std::invalid_argument);
 }
 
 TEST(BurnTimeTest, InvalidInitialMassThrows) {
-    EXPECT_THROW(burn_time(0.08, 1e-4, 3000.0, 0.0), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(burn_time(0.08, 1e-4, 3000.0, 0.0)), std::invalid_argument);
 }
 
 TEST(BurnTimeTest, NonFiniteThrows) {
     const double nan = std::numeric_limits<double>::quiet_NaN();
     const double inf = std::numeric_limits<double>::infinity();
-    EXPECT_THROW(burn_time(nan, 1e-4, 3000.0, 1000.0), std::invalid_argument);
-    EXPECT_THROW(burn_time(0.08, inf, 3000.0, 1000.0), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(burn_time(nan, 1e-4, 3000.0, 1000.0)), std::invalid_argument);
+    EXPECT_THROW(static_cast<void>(burn_time(0.08, inf, 3000.0, 1000.0)), std::invalid_argument);
 }
 
 

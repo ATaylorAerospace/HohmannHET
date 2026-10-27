@@ -24,6 +24,7 @@ macro(add_hohmann_test target source)
     add_executable(${target} ${source})
     target_link_libraries(${target} PRIVATE hohmann_het GTest::gtest_main GTest::gmock)
     target_compile_features(${target} PRIVATE cxx_std_20)
+    target_compile_options(${target} PRIVATE ${HOHMANN_HET_WARNING_FLAGS})
     add_test(NAME ${target} COMMAND ${target})
 endmacro()
 

@@ -168,8 +168,11 @@ classdef TestDynamics < matlab.unittest.TestCase
         end
 
         function testNanH1Throws(tc)
+        % Validators run in declaration order ({mustBePositive, mustBeFinite}).
+        % mustBePositive tests NaN > 0, which is false, so it rejects NaN first
+        % with its own identifier; mustBeFinite is never reached.
             tc.verifyError(@() hohmann_het.Dynamics.compute_hohmann(NaN, tc.H2), ...
-                           'MATLAB:validators:mustBeNonNan');
+                           'MATLAB:validators:mustBePositive');
         end
 
         function testInfH2Throws(tc)

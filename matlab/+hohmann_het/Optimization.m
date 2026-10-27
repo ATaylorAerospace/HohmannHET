@@ -119,7 +119,7 @@ classdef Optimization
                 m_initial        (1,1) double {mustBePositive,    mustBeFinite}
                 delta_v_m_s      (1,1) double {mustBePositive,    mustBeFinite}
                 discharge_power  (1,1) double {mustBePositive,    mustBeFinite}
-                anode_efficiency (1,1) double {mustBeInRange(anode_efficiency, 0, 1, "exclusive", "exclusive")}
+                anode_efficiency (1,1) double {mustBeInRange(anode_efficiency, 0, 1, "exclusive")}
                 isp_min          (1,1) double {mustBePositive,    mustBeFinite} = 500.0
                 isp_max          (1,1) double {mustBePositive,    mustBeFinite} = 5000.0
                 lambda_weight    (1,1) double {mustBeNonnegative, mustBeFinite} = 1e-4
@@ -182,7 +182,7 @@ classdef Optimization
                 h2               (1,1) double {mustBePositive,    mustBeFinite}
                 m_initial        (1,1) double {mustBePositive,    mustBeFinite}
                 discharge_power  (1,1) double {mustBePositive,    mustBeFinite}
-                anode_efficiency (1,1) double {mustBeInRange(anode_efficiency, 0, 1, "exclusive", "exclusive")}
+                anode_efficiency (1,1) double {mustBeInRange(anode_efficiency, 0, 1, "exclusive")}
                 isp_min          (1,1) double {mustBePositive,    mustBeFinite} = 500.0
                 isp_max          (1,1) double {mustBePositive,    mustBeFinite} = 5000.0
                 lambda_weight    (1,1) double {mustBeNonnegative, mustBeFinite} = 1e-4
