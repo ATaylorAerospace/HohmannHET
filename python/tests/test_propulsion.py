@@ -5,16 +5,17 @@ Validates HET models against SPT-100 class operating points and
 verifies cross-language parity for Tsiolkovsky propellant calculations.
 """
 import math
-import pytest
+
 import astropy.units as u
+import pytest
 
 from hohmann_het.propulsion import (
+    E_CHARGE,
+    G0,
+    M_XE,
+    burn_time,
     compute_het_state,
     propellant_mass,
-    burn_time,
-    G0,
-    E_CHARGE,
-    M_XE,
 )
 
 TOL = 1e-6
@@ -127,6 +128,14 @@ class TestComputeHETStateErrors:
         with pytest.raises(ValueError):
             compute_het_state(V_D_REF, P_D_REF, 1.5)
 
+    def test_nan_efficiency(self):
+        with pytest.raises(ValueError):
+            compute_het_state(V_D_REF, P_D_REF, float("nan"))
+
+    def test_nan_voltage(self):
+        with pytest.raises(ValueError):
+            compute_het_state(float("nan"), P_D_REF, ETA_REF)
+
 
 class TestPropellantMass:
     # Reference: m0=1000 kg, dv=3852.6 m/s (LEO-GEO), Isp=ISP_REF
@@ -182,6 +191,10 @@ class TestPropellantMass:
         with pytest.raises(ValueError):
             propellant_mass(self.M0, -1.0, ISP_REF)
 
+    def test_nan_mass_raises(self):
+        with pytest.raises(ValueError):
+            propellant_mass(float("nan"), self.DV, ISP_REF)
+
 
 class TestGoldenReferenceValues:
     """Hardcoded golden values shared verbatim across the Python, C++, and
@@ -221,11 +234,32 @@ class TestBurnTime:
 
     def test_units(self):
         s = compute_het_state(V_D_REF, P_D_REF, ETA_REF)
-        tb = burn_time(s.thrust, s.mass_flow, 3.8526, 1000.0)
+        tb = burn_time(s.thrust, s.mass_flow, 3852.6, 1000.0)
         assert tb.unit == u.s
 
     def test_larger_dv_longer_burn(self):
         s = compute_het_state(V_D_REF, P_D_REF, ETA_REF)
-        tb1 = burn_time(s.thrust, s.mass_flow, 1.0, 1000.0)
-        tb2 = burn_time(s.thrust, s.mass_flow, 3.0, 1000.0)
+        tb1 = burn_time(s.thrust, s.mass_flow, 1000.0, 1000.0)
+        tb2 = burn_time(s.thrust, s.mass_flow, 3000.0, 1000.0)
         assert tb2.value > tb1.value
+
+    def test_zero_dv_zero_burn_time(self):
+        s = compute_het_state(V_D_REF, P_D_REF, ETA_REF)
+        tb = burn_time(s.thrust, s.mass_flow, 0.0, 1000.0)
+        assert abs(tb.value) < TOL
+
+    def test_invalid_thrust_raises(self):
+        with pytest.raises(ValueError):
+            burn_time(-1.0, 1e-4, 3000.0, 1000.0)
+
+    def test_invalid_mass_flow_raises(self):
+        with pytest.raises(ValueError):
+            burn_time(0.1, 0.0, 3000.0, 1000.0)
+
+    def test_invalid_dv_raises(self):
+        with pytest.raises(ValueError):
+            burn_time(0.1, 1e-4, -10.0, 1000.0)
+
+    def test_nan_input_raises(self):
+        with pytest.raises(ValueError):
+            burn_time(float("nan"), 1e-4, 3000.0, 1000.0)

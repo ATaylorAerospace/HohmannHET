@@ -81,8 +81,8 @@ class HohmannTransfer:
 # Public functions
 # ---------------------------------------------------------------------------
 def compute_hohmann(
-    h1: "u.Quantity | float",
-    h2: "u.Quantity | float",
+    h1: u.Quantity | float,
+    h2: u.Quantity | float,
 ) -> HohmannTransfer:
     r"""Compute a two-impulse Hohmann transfer between circular orbits.
 
@@ -137,7 +137,7 @@ def compute_hohmann(
     Raises
     ------
     ValueError
-        If either altitude is non-positive.
+        If either altitude is non-positive or non-finite.
 
     Examples
     --------
@@ -145,7 +145,7 @@ def compute_hohmann(
     >>> from hohmann_het.dynamics import compute_hohmann
     >>> r = compute_hohmann(400.0 * u.km, 35786.0 * u.km)
     >>> print(f"total dv = {r.total_dv:.4f}")
-    total dv = 3.8526 km / s
+    total dv = 3.8540 km / s
     """
     if not isinstance(h1, u.Quantity):
         h1 = float(h1) * u.km
@@ -155,18 +155,20 @@ def compute_hohmann(
     h1 = h1.to(u.km)
     h2 = h2.to(u.km)
 
-    if h1.value <= 0.0 or h2.value <= 0.0:
-        raise ValueError("Orbit altitudes must be positive.")
+    h1_val = float(h1.value)
+    h2_val = float(h2.value)
+    if not (math.isfinite(h1_val) and math.isfinite(h2_val)) or h1_val <= 0.0 or h2_val <= 0.0:
+        raise ValueError("Orbit altitudes must be finite and positive.")
 
     r1 = R_EARTH + h1
     r2 = R_EARTH + h2
     a_t = (r1 + r2) * 0.5
 
     # Work in raw floats for speed; attach units to results
-    mu = MU.value        # km^3/s^2
-    r1v = r1.value       # km
-    r2v = r2.value       # km
-    av  = a_t.value      # km
+    mu = float(MU.value)        # km^3/s^2
+    r1v = float(r1.value)       # km
+    r2v = float(r2.value)       # km
+    av  = float(a_t.value)      # km
 
     mu_over_a = mu / av
 
@@ -189,7 +191,7 @@ def compute_hohmann(
     )
 
 
-def circular_velocity(r: "u.Quantity | float") -> u.Quantity:
+def circular_velocity(r: u.Quantity | float) -> u.Quantity:
     r"""Circular orbit speed at radius *r*.
 
     .. math::
@@ -208,12 +210,13 @@ def circular_velocity(r: "u.Quantity | float") -> u.Quantity:
     if not isinstance(r, u.Quantity):
         r = float(r) * u.km
     r = r.to(u.km)
-    if r.value <= 0.0:
-        raise ValueError("Orbital radius must be positive.")
-    return math.sqrt(MU.value / r.value) * (u.km / u.s)
+    rv = float(r.value)
+    if not math.isfinite(rv) or rv <= 0.0:
+        raise ValueError("Orbital radius must be finite and positive.")
+    return math.sqrt(float(MU.value) / rv) * (u.km / u.s)
 
 
-def orbital_period(a: "u.Quantity | float") -> u.Quantity:
+def orbital_period(a: u.Quantity | float) -> u.Quantity:
     r"""Keplerian orbital period.
 
     .. math::
@@ -232,7 +235,7 @@ def orbital_period(a: "u.Quantity | float") -> u.Quantity:
     if not isinstance(a, u.Quantity):
         a = float(a) * u.km
     a = a.to(u.km)
-    if a.value <= 0.0:
-        raise ValueError("Semi-major axis must be positive.")
-    av = a.value
-    return 2.0 * math.pi * av * math.sqrt(av / MU.value) * u.s
+    av = float(a.value)
+    if not math.isfinite(av) or av <= 0.0:
+        raise ValueError("Semi-major axis must be finite and positive.")
+    return 2.0 * math.pi * av * math.sqrt(av / float(MU.value)) * u.s

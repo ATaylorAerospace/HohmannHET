@@ -11,7 +11,7 @@ classdef Propulsion
 %
 % Usage:
 %   state = hohmann_het.Propulsion.compute_het_state(300, 1350, 0.50)
-%   mp    = hohmann_het.Propulsion.propellant_mass(1000, 3.8526, 1514)
+%   mp    = hohmann_het.Propulsion.propellant_mass(1000, 3852.6, 1514)
 %
 % Author: A Taylor | Ref: Vallado/Curtis
 

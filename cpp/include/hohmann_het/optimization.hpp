@@ -70,6 +70,13 @@ struct OptimizationResult {
 template <typename F>
 double golden_section_minimize(F func, double a, double b, double tol = 1e-9)
 {
+    if (!std::isfinite(a) || !std::isfinite(b) || !std::isfinite(tol))
+        throw std::invalid_argument("Search bounds and tolerance must be finite.");
+    if (b <= a)
+        throw std::invalid_argument("Search bounds must satisfy a < b.");
+    if (tol <= 0.0)
+        throw std::invalid_argument("Convergence tolerance must be strictly positive.");
+
     const double gr = (std::sqrt(5.0) + 1.0) / 2.0;
     double c = b - (b - a) / gr;
     double d = a + (b - a) / gr;
@@ -122,7 +129,7 @@ double golden_section_minimize(F func, double a, double b, double tol = 1e-9)
  * @param anode_efficiency  HET anode efficiency @f$\eta_a \in (0,1)@f$.
  * @param isp_min           Lower bound of Isp search [s]. Default 500.
  * @param isp_max           Upper bound of Isp search [s]. Default 5000.
- * @param lambda_weight     Burn-time penalty weight. Default 1e-4.
+ * @param lambda_weight     Burn-time penalty weight @f$\lambda \ge 0@f$. Default 1e-4.
  * @return                  OptimizationResult with optimal Isp and mission parameters.
  * @throws std::invalid_argument on invalid inputs.
  */
@@ -135,12 +142,15 @@ double golden_section_minimize(F func, double a, double b, double tol = 1e-9)
     double isp_max        = 5000.0,
     double lambda_weight  = 1e-4)
 {
-    if (m_initial <= 0.0 || delta_v <= 0.0 || discharge_power <= 0.0)
-        throw std::invalid_argument("Mass, delta-V, and power must be strictly positive.");
-    if (anode_efficiency <= 0.0 || anode_efficiency >= 1.0)
+    if (!std::isfinite(m_initial) || !std::isfinite(delta_v) || !std::isfinite(discharge_power) ||
+        m_initial <= 0.0 || delta_v <= 0.0 || discharge_power <= 0.0)
+        throw std::invalid_argument("Mass, delta-V, and power must be finite and strictly positive.");
+    if (!std::isfinite(anode_efficiency) || anode_efficiency <= 0.0 || anode_efficiency >= 1.0)
         throw std::invalid_argument("Anode efficiency must be in (0, 1).");
-    if (isp_min <= 0.0 || isp_max <= isp_min)
-        throw std::invalid_argument("Isp bounds must satisfy 0 < isp_min < isp_max.");
+    if (!std::isfinite(isp_min) || !std::isfinite(isp_max) || isp_min <= 0.0 || isp_max <= isp_min)
+        throw std::invalid_argument("Isp bounds must be finite and satisfy 0 < isp_min < isp_max.");
+    if (!std::isfinite(lambda_weight) || lambda_weight < 0.0)
+        throw std::invalid_argument("lambda_weight must be finite and non-negative.");
 
     const double g0    = constants::G0;
     const double ve_ref = isp_min * g0;
@@ -180,6 +190,7 @@ double golden_section_minimize(F func, double a, double b, double tol = 1e-9)
  * @param anode_efficiency  Anode efficiency in (0, 1).
  * @param isp_min           Lower Isp search bound [s]. Default 500.
  * @param isp_max           Upper Isp search bound [s]. Default 5000.
+ * @param lambda_weight     Burn-time penalty weight @f$\lambda \ge 0@f$. Default 1e-4.
  * @return OptimizationResult
  */
 [[nodiscard]] inline OptimizationResult min_propellant_transfer(
@@ -188,15 +199,16 @@ double golden_section_minimize(F func, double a, double b, double tol = 1e-9)
     double m_initial,
     double discharge_power,
     double anode_efficiency,
-    double isp_min = 500.0,
-    double isp_max = 5000.0)
+    double isp_min       = 500.0,
+    double isp_max       = 5000.0,
+    double lambda_weight = 1e-4)
 {
     const auto transfer = compute_hohmann(h1, h2);
     // Convert total_dv from km/s to m/s for optimize_isp
     const double dv_ms = transfer.total_dv() * 1000.0;
     return optimize_isp(
         m_initial, dv_ms, discharge_power, anode_efficiency,
-        isp_min, isp_max);
+        isp_min, isp_max, lambda_weight);
 }
 
 } // namespace hohmann_het

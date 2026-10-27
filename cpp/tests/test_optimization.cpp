@@ -11,6 +11,7 @@
 
 #include <gtest/gtest.h>
 #include <cmath>
+#include <limits>
 #include <stdexcept>
 
 #include "hohmann_het/optimization.hpp"
@@ -52,6 +53,31 @@ TEST(GoldenSectionTest, NarrowInterval) {
     const double x_min = golden_section_minimize(
         [](double x) { return (x - 7.3) * (x - 7.3); }, 7.0, 8.0);
     EXPECT_NEAR(x_min, 7.3, 1e-6);
+}
+
+TEST(GoldenSectionTest, InvalidBoundsThrows) {
+    EXPECT_THROW(golden_section_minimize([](double x) { return x * x; }, 5.0, 1.0),
+                 std::invalid_argument);
+    EXPECT_THROW(golden_section_minimize([](double x) { return x * x; }, 2.0, 2.0),
+                 std::invalid_argument);
+}
+
+TEST(GoldenSectionTest, NonPositiveTolThrows) {
+    EXPECT_THROW(golden_section_minimize([](double x) { return x * x; }, 0.0, 5.0, 0.0),
+                 std::invalid_argument);
+    EXPECT_THROW(golden_section_minimize([](double x) { return x * x; }, 0.0, 5.0, -1e-6),
+                 std::invalid_argument);
+}
+
+TEST(GoldenSectionTest, NonFiniteThrows) {
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    const double inf = std::numeric_limits<double>::infinity();
+    EXPECT_THROW(golden_section_minimize([](double x) { return x * x; }, nan, 5.0),
+                 std::invalid_argument);
+    EXPECT_THROW(golden_section_minimize([](double x) { return x * x; }, 0.0, inf),
+                 std::invalid_argument);
+    EXPECT_THROW(golden_section_minimize([](double x) { return x * x; }, 0.0, 5.0, nan),
+                 std::invalid_argument);
 }
 
 
@@ -146,4 +172,63 @@ TEST(OptimizeIspValidation, BadIspBoundsThrows) {
 TEST(OptimizeIspValidation, EqualIspBoundsThrows) {
     EXPECT_THROW(optimize_isp(M0, DV, P, ETA, 1500.0, 1500.0),
                  std::invalid_argument);
+}
+
+TEST(OptimizeIspValidation, NegativeLambdaThrows) {
+    EXPECT_THROW(optimize_isp(M0, DV, P, ETA, 800.0, 4000.0, -0.1),
+                 std::invalid_argument);
+}
+
+TEST(OptimizeIspValidation, ZeroLambdaAllowed) {
+    const auto r = optimize_isp(M0, DV, P, ETA, 800.0, 4000.0, 0.0);
+    EXPECT_NEAR(r.optimal_isp, 4000.0, 1e-4);
+}
+
+TEST(OptimizeIspValidation, NonFiniteThrows) {
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    const double inf = std::numeric_limits<double>::infinity();
+    EXPECT_THROW(optimize_isp(nan, DV, P, ETA), std::invalid_argument);
+    EXPECT_THROW(optimize_isp(M0, inf, P, ETA), std::invalid_argument);
+    EXPECT_THROW(optimize_isp(M0, DV, P, ETA, 800.0, 4000.0, nan),
+                 std::invalid_argument);
+}
+
+
+// ---------------------------------------------------------------------------
+// min_propellant_transfer
+// ---------------------------------------------------------------------------
+TEST(MinPropellantTransferTest, EndToEndLeoGeo) {
+    const auto r = min_propellant_transfer(400.0, 35786.0, M0, P, ETA);
+    EXPECT_GT(r.propellant_mass, 0.0);
+    EXPECT_GT(r.optimal_isp, 0.0);
+}
+
+TEST(MinPropellantTransferTest, ConsistencyWithOptimizeIsp) {
+    const auto transfer = compute_hohmann(400.0, 35786.0);
+    const double dv_ms  = transfer.total_dv() * 1000.0;
+    const auto r_direct = optimize_isp(M0, dv_ms, P, ETA);
+    const auto r_wrap   = min_propellant_transfer(400.0, 35786.0, M0, P, ETA);
+    EXPECT_NEAR(r_direct.optimal_isp,     r_wrap.optimal_isp,     TOL);
+    EXPECT_NEAR(r_direct.propellant_mass, r_wrap.propellant_mass, TOL);
+}
+
+TEST(MinPropellantTransferTest, LambdaWeightForwarding) {
+    const auto transfer = compute_hohmann(400.0, 35786.0);
+    const double dv_ms  = transfer.total_dv() * 1000.0;
+    const auto r_direct = optimize_isp(M0, dv_ms, P, ETA, 500.0, 5000.0, 0.1);
+    const auto r_wrap   = min_propellant_transfer(
+        400.0, 35786.0, M0, P, ETA, 500.0, 5000.0, 0.1);
+    EXPECT_NEAR(r_direct.optimal_isp,     r_wrap.optimal_isp,     TOL);
+    EXPECT_NEAR(r_direct.propellant_mass, r_wrap.propellant_mass, TOL);
+}
+
+
+// ---------------------------------------------------------------------------
+// Golden reference values (shared verbatim with Python and MATLAB suites)
+// ---------------------------------------------------------------------------
+TEST(OptimizationGolden, InteriorOptimumValues) {
+    const auto r = optimize_isp(M0, DV, P, ETA, 500.0, 5000.0, 0.1);
+    EXPECT_NEAR(r.optimal_isp,     1187.9261754441786, 1e-4);
+    EXPECT_NEAR(r.propellant_mass, 281.5845876650631,  1e-4);
+    EXPECT_NEAR(r.objective_value, 0.5191698227538988, 1e-6);
 }

@@ -12,6 +12,7 @@
 
 #include <gtest/gtest.h>
 #include <cmath>
+#include <limits>
 #include <stdexcept>
 
 #include "hohmann_het/propulsion.hpp"
@@ -130,6 +131,14 @@ TEST(PropulsionValidation, EfficiencyAboveOneThrows) {
     EXPECT_THROW(compute_het_state(V_D, P_D, 1.5), std::invalid_argument);
 }
 
+TEST(PropulsionValidation, NonFiniteThrows) {
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    const double inf = std::numeric_limits<double>::infinity();
+    EXPECT_THROW(compute_het_state(nan, P_D, ETA), std::invalid_argument);
+    EXPECT_THROW(compute_het_state(V_D, inf, ETA), std::invalid_argument);
+    EXPECT_THROW(compute_het_state(V_D, P_D, nan), std::invalid_argument);
+}
+
 
 // ---------------------------------------------------------------------------
 // propellant_mass (Tsiolkovsky)
@@ -181,6 +190,14 @@ TEST_F(TsiolkovskyTest, ZeroIspThrows) {
     EXPECT_THROW(propellant_mass(M0, DV_MS, 0.0), std::invalid_argument);
 }
 
+TEST_F(TsiolkovskyTest, NonFiniteThrows) {
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    const double inf = std::numeric_limits<double>::infinity();
+    EXPECT_THROW(propellant_mass(nan, DV_MS, isp_ref), std::invalid_argument);
+    EXPECT_THROW(propellant_mass(M0, inf, isp_ref), std::invalid_argument);
+    EXPECT_THROW(propellant_mass(M0, DV_MS, nan), std::invalid_argument);
+}
+
 
 // ---------------------------------------------------------------------------
 // burn_time
@@ -204,6 +221,25 @@ TEST(BurnTimeTest, ZeroDvZeroBurnTime) {
 
 TEST(BurnTimeTest, InvalidThrustThrows) {
     EXPECT_THROW(burn_time(-1.0, 1e-4, 3000.0, 1000.0), std::invalid_argument);
+}
+
+TEST(BurnTimeTest, InvalidMassFlowThrows) {
+    EXPECT_THROW(burn_time(0.08, 0.0, 3000.0, 1000.0), std::invalid_argument);
+}
+
+TEST(BurnTimeTest, NegativeDeltaVThrows) {
+    EXPECT_THROW(burn_time(0.08, 1e-4, -10.0, 1000.0), std::invalid_argument);
+}
+
+TEST(BurnTimeTest, InvalidInitialMassThrows) {
+    EXPECT_THROW(burn_time(0.08, 1e-4, 3000.0, 0.0), std::invalid_argument);
+}
+
+TEST(BurnTimeTest, NonFiniteThrows) {
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    const double inf = std::numeric_limits<double>::infinity();
+    EXPECT_THROW(burn_time(nan, 1e-4, 3000.0, 1000.0), std::invalid_argument);
+    EXPECT_THROW(burn_time(0.08, inf, 3000.0, 1000.0), std::invalid_argument);
 }
 
 

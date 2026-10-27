@@ -64,8 +64,8 @@ class HETState:
 # Public functions
 # ---------------------------------------------------------------------------
 def compute_het_state(
-    discharge_voltage: "u.Quantity | float",
-    discharge_power: "u.Quantity | float",
+    discharge_voltage: u.Quantity | float,
+    discharge_power: u.Quantity | float,
     anode_efficiency: float,
 ) -> HETState:
     r"""Compute Hall Effect Thruster operating point from discharge parameters.
@@ -107,40 +107,41 @@ def compute_het_state(
     Raises
     ------
     ValueError
-        If voltage, power, or efficiency are out of range.
+        If voltage, power, or efficiency are out of range or non-finite.
     """
     if not isinstance(discharge_voltage, u.Quantity):
         discharge_voltage = float(discharge_voltage) * u.V
     if not isinstance(discharge_power, u.Quantity):
         discharge_power = float(discharge_power) * u.W
 
-    V_d = discharge_voltage.to(u.V).value
-    P_d = discharge_power.to(u.W).value
+    V_d = float(discharge_voltage.to(u.V).value)
+    P_d = float(discharge_power.to(u.W).value)
+    eta_a = float(anode_efficiency)
 
-    if V_d <= 0.0 or P_d <= 0.0:
-        raise ValueError("Discharge voltage and power must be positive.")
-    if not (0.0 < anode_efficiency < 1.0):
+    if not (math.isfinite(V_d) and math.isfinite(P_d)) or V_d <= 0.0 or P_d <= 0.0:
+        raise ValueError("Discharge voltage and power must be finite and positive.")
+    if not math.isfinite(eta_a) or not (0.0 < eta_a < 1.0):
         raise ValueError("Anode efficiency must be in (0, 1).")
 
-    ve   = math.sqrt(2.0 * anode_efficiency * E_CHARGE * V_d / M_XE)  # m/s
-    isp  = ve / G0.value                                                # s
-    F    = 2.0 * anode_efficiency * P_d / ve                           # N
-    mdot = F / ve                                                       # kg/s
+    ve   = math.sqrt(2.0 * eta_a * E_CHARGE * V_d / M_XE)  # m/s
+    isp  = ve / float(G0.value)                             # s
+    F    = 2.0 * eta_a * P_d / ve                           # N
+    mdot = F / ve                                            # kg/s
 
     return HETState(
         isp=isp * u.s,
         exhaust_velocity=ve * (u.m / u.s),
         thrust=F * u.N,
         mass_flow=mdot * (u.kg / u.s),
-        anode_efficiency=anode_efficiency,
+        anode_efficiency=eta_a,
         discharge_power=P_d * u.W,
     )
 
 
 def propellant_mass(
-    m_initial: "u.Quantity | float",
-    delta_v: "u.Quantity | float",
-    isp: "u.Quantity | float",
+    m_initial: u.Quantity | float,
+    delta_v: u.Quantity | float,
+    isp: u.Quantity | float,
 ) -> u.Quantity:
     r"""Propellant mass from the Tsiolkovsky rocket equation.
 
@@ -165,7 +166,8 @@ def propellant_mass(
     Raises
     ------
     ValueError
-        If ``m_initial`` or ``isp`` are non-positive, or ``delta_v`` is negative.
+        If ``m_initial`` or ``isp`` are non-positive, ``delta_v`` is negative,
+        or any input is non-finite.
     """
     if not isinstance(m_initial, u.Quantity):
         m_initial = float(m_initial) * u.kg
@@ -174,23 +176,28 @@ def propellant_mass(
     if not isinstance(isp, u.Quantity):
         isp = float(isp) * u.s
 
-    m0   = m_initial.to(u.kg).value
-    dv   = delta_v.to(u.m / u.s).value
-    isp_s = isp.to(u.s).value
+    m0    = float(m_initial.to(u.kg).value)
+    dv    = float(delta_v.to(u.m / u.s).value)
+    isp_s = float(isp.to(u.s).value)
 
-    if m0 <= 0.0 or isp_s <= 0.0 or dv < 0.0:
-        raise ValueError("m_initial and isp must be positive; delta_v must be non-negative.")
+    if (
+        not (math.isfinite(m0) and math.isfinite(dv) and math.isfinite(isp_s))
+        or m0 <= 0.0
+        or isp_s <= 0.0
+        or dv < 0.0
+    ):
+        raise ValueError("m_initial and isp must be finite and positive; delta_v must be finite and non-negative.")
 
-    ve = isp_s * G0.value                 # m/s
+    ve = isp_s * float(G0.value)          # m/s
     mp = m0 * (1.0 - math.exp(-dv / ve))
     return mp * u.kg
 
 
 def burn_time(
-    thrust: "u.Quantity | float",
-    mass_flow: "u.Quantity | float",
-    delta_v: "u.Quantity | float",
-    m_initial: "u.Quantity | float",
+    thrust: u.Quantity | float,
+    mass_flow: u.Quantity | float,
+    delta_v: u.Quantity | float,
+    m_initial: u.Quantity | float,
 ) -> u.Quantity:
     r"""Constant-thrust burn time for a given delta-V.
 
@@ -218,6 +225,12 @@ def burn_time(
     -------
     u.Quantity
         Burn time [s].
+
+    Raises
+    ------
+    ValueError
+        If ``thrust``, ``mass_flow``, or ``m_initial`` are non-positive,
+        ``delta_v`` is negative, or any input is non-finite.
     """
     if not isinstance(thrust, u.Quantity):
         thrust = float(thrust) * u.N
@@ -228,13 +241,19 @@ def burn_time(
     if not isinstance(m_initial, u.Quantity):
         m_initial = float(m_initial) * u.kg
 
-    F    = thrust.to(u.N).value
-    mdot = mass_flow.to(u.kg / u.s).value
-    dv   = delta_v.to(u.m / u.s).value
-    m0   = m_initial.to(u.kg).value
+    F    = float(thrust.to(u.N).value)
+    mdot = float(mass_flow.to(u.kg / u.s).value)
+    dv   = float(delta_v.to(u.m / u.s).value)
+    m0   = float(m_initial.to(u.kg).value)
 
-    if F <= 0.0 or mdot <= 0.0 or m0 <= 0.0 or dv < 0.0:
-        raise ValueError("Thrust, mass flow, and initial mass must be positive; dv >= 0.")
+    if (
+        not (math.isfinite(F) and math.isfinite(mdot) and math.isfinite(dv) and math.isfinite(m0))
+        or F <= 0.0
+        or mdot <= 0.0
+        or m0 <= 0.0
+        or dv < 0.0
+    ):
+        raise ValueError("Thrust, mass flow, and initial mass must be finite and positive; dv >= 0.")
 
     ve = F / mdot                                    # m/s
     tb = (m0 / mdot) * (1.0 - math.exp(-dv / ve))

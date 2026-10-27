@@ -12,6 +12,7 @@
 
 #include <gtest/gtest.h>
 #include <cmath>
+#include <limits>
 #include <stdexcept>
 
 #include "hohmann_het/dynamics.hpp"
@@ -200,6 +201,18 @@ TEST(DynamicsValidation, BothNegativeThrows) {
     EXPECT_THROW(compute_hohmann(-100.0, -200.0), std::invalid_argument);
 }
 
+TEST(DynamicsValidation, NanInputThrows) {
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    EXPECT_THROW(compute_hohmann(nan, GEO_ALT), std::invalid_argument);
+    EXPECT_THROW(compute_hohmann(LEO_ALT, nan), std::invalid_argument);
+}
+
+TEST(DynamicsValidation, InfInputThrows) {
+    const double inf = std::numeric_limits<double>::infinity();
+    EXPECT_THROW(compute_hohmann(inf, GEO_ALT), std::invalid_argument);
+    EXPECT_THROW(compute_hohmann(LEO_ALT, inf), std::invalid_argument);
+}
+
 
 // ---------------------------------------------------------------------------
 // circular_velocity
@@ -215,6 +228,13 @@ TEST(DynamicsCircularVelocity, NegativeRadiusThrows) {
 
 TEST(DynamicsCircularVelocity, ZeroRadiusThrows) {
     EXPECT_THROW(circular_velocity(0.0), std::invalid_argument);
+}
+
+TEST(DynamicsCircularVelocity, NonFiniteRadiusThrows) {
+    EXPECT_THROW(circular_velocity(std::numeric_limits<double>::quiet_NaN()),
+                 std::invalid_argument);
+    EXPECT_THROW(circular_velocity(std::numeric_limits<double>::infinity()),
+                 std::invalid_argument);
 }
 
 
@@ -234,6 +254,13 @@ TEST(DynamicsOrbitalPeriod, FormulaConsistency) {
 
 TEST(DynamicsOrbitalPeriod, NegativeSmaThrows) {
     EXPECT_THROW(orbital_period(-1.0), std::invalid_argument);
+}
+
+TEST(DynamicsOrbitalPeriod, NonFiniteSmaThrows) {
+    EXPECT_THROW(orbital_period(std::numeric_limits<double>::quiet_NaN()),
+                 std::invalid_argument);
+    EXPECT_THROW(orbital_period(std::numeric_limits<double>::infinity()),
+                 std::invalid_argument);
 }
 
 

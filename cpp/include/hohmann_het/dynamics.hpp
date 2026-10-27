@@ -105,8 +105,8 @@ struct HohmannTransfer {
 {
     using namespace constants;
 
-    if (h1 <= 0.0 || h2 <= 0.0)
-        throw std::invalid_argument("Orbit altitudes must be positive.");
+    if (!std::isfinite(h1) || !std::isfinite(h2) || h1 <= 0.0 || h2 <= 0.0)
+        throw std::invalid_argument("Orbit altitudes must be finite and positive.");
 
     const double r1 = R_EARTH + h1;
     const double r2 = R_EARTH + h2;
@@ -134,12 +134,12 @@ struct HohmannTransfer {
  *
  * @param r  Orbital radius [km]. Must be positive.
  * @return   Circular velocity [km/s].
- * @throws std::invalid_argument if radius is non-positive.
+ * @throws std::invalid_argument if radius is non-positive or non-finite.
  */
 [[nodiscard]] inline double circular_velocity(double r)
 {
-    if (r <= 0.0)
-        throw std::invalid_argument("Orbital radius must be positive.");
+    if (!std::isfinite(r) || r <= 0.0)
+        throw std::invalid_argument("Orbital radius must be finite and positive.");
     return std::sqrt(constants::MU / r);
 }
 
@@ -151,12 +151,12 @@ struct HohmannTransfer {
  *
  * @param a  Semi-major axis [km]. Must be positive.
  * @return   Orbital period [s].
- * @throws std::invalid_argument if semi-major axis is non-positive.
+ * @throws std::invalid_argument if semi-major axis is non-positive or non-finite.
  */
 [[nodiscard]] inline double orbital_period(double a)
 {
-    if (a <= 0.0)
-        throw std::invalid_argument("Semi-major axis must be positive.");
+    if (!std::isfinite(a) || a <= 0.0)
+        throw std::invalid_argument("Semi-major axis must be finite and positive.");
     return 2.0 * constants::PI * a * std::sqrt(a / constants::MU);
 }
 
